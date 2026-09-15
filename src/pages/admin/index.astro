@@ -31,17 +31,64 @@ if (!(await isAdminRequest(Astro.request))) return Astro.redirect('/admin-login'
   <script is:inline>
     const presetNames = ${JSON.stringify(Object.fromEntries(classTypePresets.map((type) => [type.id, type.name])))};
     const classList = document.querySelector('#class-list');
-    const selects = [document.querySelector('#student-class'),document.querySelector('#manual-class'),document.querySelector('#email-class')];
-    let classes=[];
-    const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    async function loadClasses(){const r=await fetch('/api/admin/classes');if(r.status===401){location='/admin-login';return;}const data=await r.json();classes=data.classes||[];classList.innerHTML=classes.length?classes.map(c=>`<div class="admin-row"><span><strong>${esc(c.title)}</strong><small>${esc(c.type_id)}</small></span><span>${esc(c.start_date)} – ${esc(c.end_date)}</span><span>${c.student_count||0}${c.capacity?` / ${c.capacity}`:''}</span><span class="status-pill">${new Date(c.end_date+'T23:59:59')>=new Date()?'Upcoming':'Archived'}</span></div>`).join(''):'<div class="admin-empty">No classes yet. Create the first one below.</div>';selects.forEach(s=>{s.innerHTML='<option value="">Select a class</option>'+classes.filter(c=>new Date(c.end_date+'T23:59:59')>=new Date()).map(c=>`<option value="${c.id}">${esc(c.title)} · ${esc(c.start_date)}</option>`).join('')});}
-    async function loadTemplates(){const r=await fetch('/api/admin/templates');if(r.status!==200)return;const data=await r.json();document.querySelector('#email-template').innerHTML='<option value="">Select a template</option>'+(data.templates||[]).map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');}
-    document.querySelector('#class-type').addEventListener('change',e=>document.querySelector('#class-name').value=presetNames[e.target.value]||'');
-    document.querySelector('#class-form').addEventListener('submit',async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.target));const r=await fetch('/api/admin/classes',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});document.querySelector('#class-result').textContent=r.ok?'Class saved.':'Unable to save class.';if(r.ok){e.target.reset();loadClasses();}});
-    document.querySelector('#student-class').addEventListener('change',async e=>{const target=document.querySelector('#student-list');if(!e.target.value){target.innerHTML='';return;}const r=await fetch('/api/admin/students?classId='+encodeURIComponent(e.target.value));const data=await r.json();target.innerHTML=(data.students||[]).map(s=>`<div class="admin-row"><span><strong>${esc(s.name)}</strong><small>${esc(s.email)}</small></span><span>${esc(s.phone||'')}</span><span>${esc(s.source)}</span><span>${esc(s.payment_status)}</span></div>`).join('')||'<div class="admin-empty">No registrations yet.</div>';});
-    document.querySelector('#student-form').addEventListener('submit',async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.target));const r=await fetch('/api/admin/students',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});document.querySelector('#student-result').textContent=r.ok?'Student added and registration email sent.':'Unable to add student.';if(r.ok){e.target.reset();loadClasses();}});
-    document.querySelector('#email-form').addEventListener('submit',async e=>{e.preventDefault();if(!confirm('Send this email to everyone registered for this class?'))return;const data=Object.fromEntries(new FormData(e.target));const r=await fetch('/api/admin/send-email',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});const result=await r.json();document.querySelector('#email-result').textContent=r.ok?`Sent: ${result.sentCount}. Failed: ${result.failedCount}.`:(result.error||'Unable to send.');});
-    document.querySelector('#logout').addEventListener('click',async()=>{await fetch('/api/admin-login',{method:'DELETE'});location='/admin-login';});
-    loadClasses();loadTemplates();
+    const selects = [document.querySelector('#student-class'), document.querySelector('#manual-class'), document.querySelector('#email-class')];
+    let classes = [];
+    const esc = (value) => {
+      const text = String(value ?? '');
+      return text.replace(/[&<>"']/g, (char) => {
+        if (char === '&') return '&amp;';
+        if (char === '<') return '&lt;';
+        if (char === '>') return '&gt;';
+        if (char === '"') return '&quot;';
+        return '&#39;';
+      });
+    };
+    async function loadClasses() {
+      const r = await fetch('/api/admin/classes');
+      if (r.status === 401) { location = '/admin-login'; return; }
+      const data = await r.json();
+      classes = data.classes || [];
+      classList.innerHTML = classes.length ? classes.map(c => `<div class="admin-row"><span><strong>${esc(c.title)}</strong><small>${esc(c.type_id)}</small></span><span>${esc(c.start_date)} – ${esc(c.end_date)}</span><span>${c.student_count || 0}${c.capacity ? ` / ${c.capacity}` : ''}</span><span class="status-pill">${new Date(c.end_date + 'T23:59:59') >= new Date() ? 'Upcoming' : 'Archived'}</span></div>`).join('') : '<div class="admin-empty">No classes yet. Create the first one below.</div>';
+      selects.forEach(s => { s.innerHTML = '<option value="">Select a class</option>' + classes.filter(c => new Date(c.end_date + 'T23:59:59') >= new Date()).map(c => `<option value="${c.id}">${esc(c.title)} · ${esc(c.start_date)}</option>`).join(''); });
+    }
+    async function loadTemplates() {
+      const r = await fetch('/api/admin/templates');
+      if (r.status !== 200) return;
+      const data = await r.json();
+      document.querySelector('#email-template').innerHTML = '<option value="">Select a template</option>' + (data.templates || []).map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+    }
+    document.querySelector('#class-type').addEventListener('change', e => { document.querySelector('#class-name').value = presetNames[e.target.value] || ''; });
+    document.querySelector('#class-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const r = await fetch('/api/admin/classes', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+      document.querySelector('#class-result').textContent = r.ok ? 'Class saved.' : 'Unable to save class.';
+      if (r.ok) { e.target.reset(); loadClasses(); }
+    });
+    document.querySelector('#student-class').addEventListener('change', async e => {
+      const target = document.querySelector('#student-list');
+      if (!e.target.value) { target.innerHTML = ''; return; }
+      const r = await fetch('/api/admin/students?classId=' + encodeURIComponent(e.target.value));
+      const data = await r.json();
+      target.innerHTML = (data.students || []).map(s => `<div class="admin-row"><span><strong>${esc(s.name)}</strong><small>${esc(s.email)}</small></span><span>${esc(s.phone || '')}</span><span>${esc(s.source)}</span><span>${esc(s.payment_status)}</span></div>`).join('') || '<div class="admin-empty">No registrations yet.</div>';
+    });
+    document.querySelector('#student-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const r = await fetch('/api/admin/students', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+      document.querySelector('#student-result').textContent = r.ok ? 'Student added and registration email sent.' : 'Unable to add student.';
+      if (r.ok) { e.target.reset(); loadClasses(); }
+    });
+    document.querySelector('#email-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!confirm('Send this email to everyone registered for this class?')) return;
+      const data = Object.fromEntries(new FormData(e.target));
+      const r = await fetch('/api/admin/send-email', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+      const result = await r.json();
+      document.querySelector('#email-result').textContent = r.ok ? `Sent: ${result.sentCount}. Failed: ${result.failedCount}.` : (result.error || 'Unable to send.');
+    });
+    document.querySelector('#logout').addEventListener('click', async () => { await fetch('/api/admin-login', { method: 'DELETE' }); location = '/admin-login'; });
+    loadClasses();
+    loadTemplates();
   </script>
 </BaseLayout>
