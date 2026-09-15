@@ -1,0 +1,1 @@
+ALTER TABLE students ADD COLUMN mass_email_opt_out INTEGER NOT NULL DEFAULT 0;
