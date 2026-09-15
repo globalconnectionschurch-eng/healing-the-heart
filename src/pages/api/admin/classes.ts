@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
-import { isAdminRequest, id, json, nowIso } from '../../../lib/server';
+import { hashClassPassword, isAdminRequest, id, json, nowIso } from '../../../lib/server';
 
 export const prerender = false;
 
@@ -16,9 +16,20 @@ export const GET: APIRoute = async ({ request }) => {
 export const POST: APIRoute = async ({ request }) => {
   if (!(await isAdminRequest(request))) return json({ error: 'Unauthorized' }, 401);
   const data = await request.json() as Record<string, any>;
+
+  if (data.action === 'set-student-link-password') {
+    const classId = String(data.classId ?? '').trim();
+    const password = String(data.password ?? '').trim();
+    if (!classId || password.length < 6) return json({ error: 'Choose a class and use a password of at least 6 characters.' }, 400);
+    const classRow = await env.DB.prepare('SELECT id FROM classes WHERE id=?').bind(classId).first();
+    if (!classRow) return json({ error: 'Class not found.' }, 404);
+    const passwordHash = await hashClassPassword(password);
+    await env.DB.prepare('UPDATE classes SET student_link_password_hash=?,updated_at=? WHERE id=?').bind(passwordHash, nowIso(), classId).run();
+    return json({ ok: true });
+  }
+
   const required = ['typeId','title','startDate','endDate'];
   if (required.some((key) => !String(data[key] ?? '').trim())) return json({ error: 'Type, title, start date, and end date are required.' }, 400);
-
   const startDate = String(data.startDate).slice(0, 10);
   const endDate = String(data.endDate).slice(0, 10);
   if (endDate < startDate) return json({ error: 'End date cannot be before the start date.' }, 400);
