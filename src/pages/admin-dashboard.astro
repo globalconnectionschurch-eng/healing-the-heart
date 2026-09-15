@@ -1,0 +1,101 @@
+---
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Admin Dashboard | Healing the Heart</title>
+    <link rel="stylesheet" href="/admin.css" />
+  </head>
+  <body class="admin-shell">
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <a href="/" class="admin-brand"><span>♥</span> HEALING THE HEART</a>
+        <nav>
+          <a class="active" href="/admin-dashboard">Dashboard</a>
+          <a href="#classes">Classes</a>
+          <a href="#students">Students</a>
+          <a href="#emails">Class Emails</a>
+          <a href="#archive">Archived Classes</a>
+        </nav>
+        <a class="admin-logout" href="/admin-login">Sign out</a>
+      </aside>
+
+      <main class="admin-main">
+        <header class="admin-topbar">
+          <div><p class="admin-kicker">Administration</p><h1>Welcome back</h1></div>
+          <a class="admin-button" href="#new-class">+ New class</a>
+        </header>
+
+        <section class="admin-stats">
+          <div><span>Upcoming classes</span><strong>2</strong></div>
+          <div><span>Registered students</span><strong>31</strong></div>
+          <div><span>Needs attention</span><strong>3</strong></div>
+        </section>
+
+        <section id="classes" class="admin-panel">
+          <div class="panel-heading"><div><p class="admin-kicker">Class management</p><h2>Upcoming classes</h2></div><button class="admin-outline" type="button">View all</button></div>
+          <div class="class-list">
+            <article class="class-row">
+              <div><span class="status live">Open</span><h3>Healing &amp; Restoring the Heart</h3><p>8-week journey · Oct 6 – Nov 24, 2026</p></div>
+              <div class="class-meta"><strong>$—</strong><span>18 students</span></div>
+              <div class="row-actions"><a href="#students">Students</a><a href="#emails">Emails</a><a href="#edit">Edit</a></div>
+            </article>
+            <article class="class-row">
+              <div><span class="status live">Open</span><h3>Women's Healing Journey</h3><p>Online · Nov 3 – Dec 8, 2026</p></div>
+              <div class="class-meta"><strong>$—</strong><span>13 students</span></div>
+              <div class="row-actions"><a href="#students">Students</a><a href="#emails">Emails</a><a href="#edit">Edit</a></div>
+            </article>
+          </div>
+          <p class="admin-note">Classes automatically move to Archived after their end date. Archived classes remain available to administrators for registration history.</p>
+        </section>
+
+        <section id="students" class="admin-panel">
+          <div class="panel-heading"><div><p class="admin-kicker">Registration</p><h2>Students</h2></div><button class="admin-outline" type="button">+ Add student</button></div>
+          <div class="filter-bar"><select><option>Healing &amp; Restoring the Heart</option><option>Women's Healing Journey</option></select><input placeholder="Search students…" /></div>
+          <div class="table-wrap"><table><thead><tr><th>Student</th><th>Email</th><th>Registered</th><th>Source</th><th>Status</th></tr></thead><tbody>
+            <tr><td><strong>Example Student</strong></td><td>student@example.com</td><td>Sep 12, 2026</td><td>Online</td><td><span class="status live">Registered</span></td></tr>
+            <tr><td><strong>Example Student</strong></td><td>another@example.com</td><td>Sep 10, 2026</td><td>Admin</td><td><span class="status live">Registered</span></td></tr>
+          </tbody></table></div>
+        </section>
+
+        <section id="emails" class="admin-panel">
+          <div class="panel-heading"><div><p class="admin-kicker">Communication</p><h2>Class emails</h2><p class="admin-muted">Send a prepared message to everyone registered for the selected class.</p></div></div>
+          <div class="email-grid">
+            <button><strong>Welcome email</strong><span>Send immediately</span></button>
+            <button><strong>1st class details</strong><span>Send to registered students</span></button>
+            <button><strong>Class reminder</strong><span>Send to registered students</span></button>
+          </div>
+          <p class="admin-note">Your existing email templates can be added here later without changing the class workflow.</p>
+        </section>
+
+        <section id="new-class" class="admin-panel">
+          <div class="panel-heading"><div><p class="admin-kicker">Create</p><h2>New class</h2></div></div>
+          <div class="form-grid">
+            <label>Class type<select id="class-type"><option value="heart">Healing &amp; Restoring the Heart</option><option value="men">Men's class</option><option value="women-day">Women's daytime class</option><option value="women-evening">Women's evening class</option><option value="custom">Custom class</option></select></label>
+            <label>Class name<input id="class-name" value="Healing &amp; Restoring the Heart" /></label>
+            <label>Start date<input type="date" /></label>
+            <label>End date<input type="date" /></label>
+            <label>Price<input type="number" min="0" step="0.01" placeholder="0.00" /></label>
+            <label>Registration limit<input type="number" min="1" placeholder="Optional" /></label>
+            <label class="wide">Location / meeting details<textarea rows="3" placeholder="Online, address, meeting instructions…"></textarea></label>
+            <label class="wide">Class description<textarea rows="4" placeholder="Details shown on the public class page…"></textarea></label>
+          </div>
+          <button class="admin-button" type="button">Create class</button>
+        </section>
+      </main>
+    </div>
+    <script>
+      const presets = {
+        heart: 'Healing & Restoring the Heart',
+        men: "Men's Healing Journey",
+        'women-day': "Women's Daytime Healing Journey",
+        'women-evening': "Women's Evening Healing Journey",
+        custom: ''
+      };
+      const type = document.querySelector('#class-type');
+      const name = document.querySelector('#class-name');
+      type?.addEventListener('change', () => { name.value = presets[type.value] ?? ''; });
+    </script>
+  </body>
+</html>
