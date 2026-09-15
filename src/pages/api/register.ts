@@ -12,9 +12,7 @@ async function sendEightWeekEmail(classRow: any, student: any, registrationId: s
   const fallback = emailTemplates.find((item) => item.id === 'eight-week-class-details')!;
   const subjectTemplate = saved?.subject ?? fallback.subject;
   const bodyTemplate = saved?.body ?? fallback.body;
-  const values = {
-    firstName: student.name.split(/\s+/)[0], classTitle: classRow.title, locationName: classRow.location_name || '', locationAddress: classRow.location_address || '', schedule: classRow.schedule || '', dateRange: `${classRow.start_date} – ${classRow.end_date}`, parking: classRow.parking || '', whereToGo: classRow.where_to_go || '', contactEmail: env.CONTACT_EMAIL, siteUrl: env.SITE_URL, paymentInstructions: 'Your payment has been received.'
-  };
+  const values = { firstName: student.name.split(/\s+/)[0], classTitle: classRow.title, locationName: classRow.location_name || '', locationAddress: classRow.location_address || '', schedule: classRow.schedule || '', dateRange: `${classRow.start_date} – ${classRow.end_date}`, parking: classRow.parking || '', whereToGo: classRow.where_to_go || '', contactEmail: env.CONTACT_EMAIL, siteUrl: env.SITE_URL, paymentInstructions: 'Your payment has been received.' };
   const subject = fillTemplate(subjectTemplate, values);
   const message = fillTemplate(bodyTemplate, values);
   const sent = await sendEmail(student.email, subject, message);
@@ -37,7 +35,7 @@ export const POST: APIRoute = async ({ request }) => {
   const actualStudentId = existing?.id ?? id('student');
   const existingRegistration = await env.DB.prepare('SELECT id,source,verification_code,payment_status FROM registrations WHERE class_id=? AND student_id=?').bind(classId, actualStudentId).first<any>();
   if (classRow.capacity && !existingRegistration) {
-    const count = await env.DB.prepare(`SELECT COUNT(*) AS count FROM registrations WHERE class_id=? AND status='registered'`).bind(classId).first<{count:number}>();
+    const count = await env.DB.prepare(`SELECT COUNT(*) AS count FROM registrations WHERE class_id=? AND status IN ('registered','pending_payment')`).bind(classId).first<{count:number}>();
     if ((count?.count ?? 0) >= Number(classRow.capacity)) return json({ ok: false, error: 'That class is currently full.' }, 409);
   }
 
@@ -59,14 +57,10 @@ export const POST: APIRoute = async ({ request }) => {
   const registrationStatus = isPrepaid || isFree ? 'registered' : 'pending_payment';
   let registrationId = existingRegistration?.id as string | undefined;
   if (existingRegistration) {
-    await env.DB.prepare(`UPDATE registrations SET source='online',verification_code=?,payment_status=?,status=?,registered_at=? WHERE id=?`).bind(
-      verificationCode, paymentStatus, registrationStatus, now, registrationId
-    ).run();
+    await env.DB.prepare(`UPDATE registrations SET source='online',verification_code=?,payment_status=?,status=?,registered_at=? WHERE id=?`).bind(verificationCode, paymentStatus, registrationStatus, now, registrationId).run();
   } else {
     registrationId = id('registration');
-    await env.DB.prepare(`INSERT INTO registrations (id,class_id,student_id,source,verification_code,payment_status,status,registered_at) VALUES (?,?,?,?,?,?,?,?)`).bind(
-      registrationId,classId,actualStudentId,'online',verificationCode,paymentStatus,registrationStatus,now
-    ).run();
+    await env.DB.prepare(`INSERT INTO registrations (id,class_id,student_id,source,verification_code,payment_status,status,registered_at) VALUES (?,?,?,?,?,?,?,?)`).bind(registrationId,classId,actualStudentId,'online',verificationCode,paymentStatus,registrationStatus,now).run();
   }
 
   if (paymentStatus === 'paid') {
