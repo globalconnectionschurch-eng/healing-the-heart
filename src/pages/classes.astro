@@ -3,6 +3,28 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout title="Classes & Upcoming Dates | Healing the Heart">
 <section class="page-hero"><div class="page-hero-inner"><p class="eyebrow">Take the next step</p><h1>Classes &amp; upcoming dates</h1><p>When a class is ready to open for registration, you will find the current details here.</p></div></section>
-<section class="section"><div class="rich-section"><div class="placeholder"><strong>Current class schedule</strong><br />Dates, times, locations, availability, and registration details will appear here once confirmed.</div><h2 style="margin-top:4rem">The journey may look different for different people.</h2><p>Offerings may include the eight-week Healing &amp; Restoring the Heart class, online men's classes, online women's daytime and evening classes, follow-up gatherings, retreats, and additional healing opportunities.</p><p>We will only publish dates, prices, schedules, and program details once they are confirmed.</p></div></section>
+<section class="section"><div class="rich-section">
+  <div id="live-classes" class="class-list"><div class="placeholder">Loading current classes…</div></div>
+  <div id="no-classes" class="placeholder" hidden><strong>No upcoming classes are open right now.</strong><br />Please check back soon or contact us if you would like to hear about the next opportunity.</div>
+  <h2 style="margin-top:4rem">The journey may look different for different people.</h2>
+  <p>Offerings may include the eight-week Healing &amp; Restoring the Heart class, retreats, and additional healing opportunities.</p>
+  <p>Dates, prices, schedules, and program details shown above are the current confirmed offerings.</p>
+</div></section>
 <section class="dark-section section"><div class="rich-section"><p class="eyebrow light">Already been through the journey?</p><h2>There may be another step.</h2><p>Returning participants may find additional opportunities for continued healing, growth, and encouragement.</p><a class="button primary" href="/contact">Ask about returning</a></div></section>
+<script>
+  const target = document.querySelector('#live-classes');
+  const empty = document.querySelector('#no-classes');
+  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  const money = (cents) => Number(cents || 0) === 0 ? 'Free' : `$${(Number(cents) / 100).toFixed(2)}`;
+  async function loadClasses() {
+    try {
+      const response = await fetch('/api/classes');
+      const data = await response.json();
+      const classes = data.classes || [];
+      if (!classes.length) { target.hidden = true; empty.hidden = false; return; }
+      target.innerHTML = classes.map((c) => `<article class="class-card"><p class="eyebrow">${esc(c.type_id)}</p><h2>${esc(c.title)}</h2><p>${esc(c.description || '')}</p><div class="class-meta"><strong>${esc(c.start_date)}${c.end_date && c.end_date !== c.start_date ? ` – ${esc(c.end_date)}` : ''}</strong><span>${esc(c.schedule || '')}</span><span>${esc(c.location_name || '')}${c.location_address ? ` · ${esc(c.location_address)}` : ''}</span><span>${money(c.price_cents)}${c.capacity ? ` · ${esc(c.capacity)} spots` : ''}</span></div><a class="button primary" href="/register?classId=${encodeURIComponent(c.id)}">Register for this class</a></article>`).join('');
+    } catch (error) { target.innerHTML = '<div class="placeholder">We could not load the current schedule. Please contact us for upcoming dates.</div>'; }
+  }
+  loadClasses();
+</script>
 </BaseLayout>
