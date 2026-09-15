@@ -1,27 +1,23 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { emailTemplates } from '../../data/email-templates';
+import { isAdminRequest } from '../../lib/server';
+const authenticated = await isAdminRequest(Astro.request);
+if (!authenticated) return Astro.redirect('/admin-login');
 ---
 <BaseLayout title="Email Templates | Healing the Heart Admin">
   <section class="admin-shell">
-    <div class="admin-header"><div><p class="eyebrow">Admin</p><h1>Email templates</h1><p>Keep the messages used by the class system in one editable place. Changes will be stored with the template once the database connection is enabled.</p></div><a class="button outline" href="/admin">← Dashboard</a></div>
-    <div class="admin-grid">
-      {emailTemplates.map((template) => <article class="admin-card">
-        <div class="admin-card-head"><div><span class="status-pill">Saved template</span><h2>{template.name}</h2><p>{template.trigger}</p></div></div>
-        <label>Subject<input value={template.subject} /></label>
-        <label>Body<textarea rows="20">{template.body}</textarea></label>
-        <p class="field-note">Available merge fields include values such as <code>{'{{firstName}}'}</code>, <code>{'{{classTitle}}'}</code>, <code>{'{{startDate}}'}</code>, <code>{'{{registrationLink}}'}</code>, and <code>{'{{verificationCode}}'}</code>.</p>
-        <button class="button primary" type="button">Save template</button>
-      </article>)}
-      <article class="admin-card new-template">
-        <p class="eyebrow">Custom</p><h2>Create a new email template</h2>
-        <p>Admins will be able to create additional messages for future events, reminders, follow-ups, or other class communication.</p>
-        <label>Template name<input placeholder="e.g. Retreat packing reminder" /></label>
-        <label>Send trigger<input placeholder="e.g. 3 days before the retreat" /></label>
-        <label>Subject<input placeholder="Email subject" /></label>
-        <label>Body<textarea rows="12" placeholder="Write the email here. Merge fields can be inserted when connected."></textarea></label>
-        <button class="button primary" type="button">Create template</button>
-      </article>
-    </div>
+    <div class="admin-header"><div><p class="eyebrow">Admin</p><h1>Email templates</h1><p>Edit the saved messages used by the system, or create a new one.</p></div><a class="button outline" href="/admin">← Dashboard</a></div>
+    <div id="templates" class="admin-grid"><div class="placeholder">Loading saved templates…</div></div>
   </section>
+  <script is:inline>
+    const root = document.querySelector('#templates');
+    const esc = (value='') => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const render = (templates) => {
+      root.innerHTML = templates.map(t => `<article class="admin-card"><div class="admin-card-head"><div><span class="status-pill">Saved template</span><h2>${esc(t.name)}</h2><p>${esc(t.trigger_description || '')}</p></div></div><label>Name<input data-field="name" value="${esc(t.name)}"></label><label>Send trigger<input data-field="trigger" value="${esc(t.trigger_description || '')}"></label><label>Subject<input data-field="subject" value="${esc(t.subject)}"></label><label>Body<textarea data-field="body" rows="20">${esc(t.body)}</textarea></label><p class="field-note">Merge fields: {{firstName}}, {{classTitle}}, {{startDate}}, {{dateRange}}, {{schedule}}, {{locationName}}, {{locationAddress}}, {{registrationLink}}, {{verificationCode}}, {{classTime}}, {{contactEmail}}, {{siteUrl}}</p><button class="button primary" data-save="${esc(t.id)}">Save template</button></article>`).join('') + `<article class="admin-card new-template"><p class="eyebrow">Custom</p><h2>Create a new email template</h2><label>Name<input id="new-name"></label><label>Send trigger<input id="new-trigger"></label><label>Subject<input id="new-subject"></label><label>Body<textarea id="new-body" rows="12"></textarea></label><button class="button primary" id="create-template">Create template</button></article>`;
+      root.querySelectorAll('[data-save]').forEach(button => button.addEventListener('click', async () => { const card=button.closest('article'); const payload={id:button.dataset.save,name:card.querySelector('[data-field="name"]').value,trigger:card.querySelector('[data-field="trigger"]').value,subject:card.querySelector('[data-field="subject"]').value,body:card.querySelector('[data-field="body"]').value}; const r=await fetch('/api/admin/templates',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}); button.textContent=r.ok?'Saved':'Save failed'; }));
+      root.querySelector('#create-template')?.addEventListener('click', async () => { const payload={name:root.querySelector('#new-name').value,trigger:root.querySelector('#new-trigger').value,subject:root.querySelector('#new-subject').value,body:root.querySelector('#new-body').value}; const r=await fetch('/api/admin/templates',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}); if(r.ok) load(); });
+    };
+    const load = async () => { const r=await fetch('/api/admin/templates'); if(r.status===401){location='/admin-login';return;} const data=await r.json(); render(data.templates || []); };
+    load();
+  </script>
 </BaseLayout>
