@@ -1,7 +1,27 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { classTypePresets } from '../data/class-types';
 ---
-<BaseLayout title="Register | Healing the Heart">
-<section class="page-hero"><div class="page-hero-inner"><p class="eyebrow">Take your next step</p><h1>Registration</h1><p>When registration is open, this is where you will begin.</p></div></section>
-<section class="section"><div class="rich-section"><div class="placeholder"><strong>Registration is being connected.</strong><br />The live registration form, current class selection, and confirmed class information will be added here. No dates, prices, or availability are being assumed.</div><h2 style="margin-top:4rem">Not ready to register?</h2><p>That's okay. You can first learn about the journey or what to expect, and you are welcome to ask questions.</p><div class="actions left"><a class="button primary" href="/journey">Explore the journey</a><a class="button outline" href="/contact">Contact us</a></div></div></section>
+<BaseLayout title="Registration | Healing the Heart">
+  <section class="page-hero"><div class="page-hero-inner"><p class="eyebrow">Take your next step</p><h1>Registration</h1><p>You’re taking a powerful step toward healing, and we’re excited to walk this journey with you. Fill out the form below, and a facilitator will reach out with next steps.</p></div></section>
+  <section class="section">
+    <form class="registration-form" method="post" action="/api/register">
+      <label>Name<input name="name" required autocomplete="name" /></label>
+      <label>Selected Your Course/Class<select name="classType" required><option value="">Select a class</option>{classTypePresets.map((type) => <option value={type.id}>{type.name}</option>)}</select></label>
+      <label>Email Address<input type="email" name="email" required autocomplete="email" placeholder="We’ll contact you here for class/course info." /></label>
+      <label>Phone<input type="tel" name="phone" autocomplete="tel" placeholder="Calls for urgent matters (class changes ETC)" /></label>
+      <label>Address<input name="address" autocomplete="street-address" placeholder="Address (for sending reports and course material)" /></label>
+      <label>Date of birth<input type="date" name="dateOfBirth" /></label>
+      <label>Marital status<select name="maritalStatus"><option value="">Select an option</option><option>Single</option><option>Married</option><option>Separated</option><option>Divorced</option><option>Widowed</option><option>Prefer not to say</option></select></label>
+      <label>What Church Do You Attend/Serve At?<input name="church" /></label>
+      <label>SR. Pastor Only<input name="srPastor" placeholder="Please Enter Your Clergy #" /></label>
+      <label>How did you hear about Favored Father/HTH?<input name="howHeard" placeholder="How did you hear about us" /></label>
+      <label>What do you hope to gain from this course?<textarea name="goals" placeholder="Sharing this helps us support you better."></textarea></label>
+      <label>Do you have any smoking or drinking concern? (Our facilities are smoke and alcohol free)<textarea name="smokingDrinking" placeholder="Sharing this helps us support you better."></textarea></label>
+      <label>Anything else you'd like to share to help up support your healing journey?<textarea name="anythingElse" placeholder="Share anything that helps us support you."></textarea></label>
+      <label>Verification Code <span class="field-note">(For those who were gifted this class or prepaid)</span><input name="verificationCode" placeholder="Please enter your Verification Code" /></label>
+      <p class="form-note">After submitting your form, we’ll email you instructions for completing your course payment. You can also use the payment option provided on the next step.</p>
+      <button class="button primary" type="submit">Submit Registration</button>
+    </form>
+  </section>
 </BaseLayout>
