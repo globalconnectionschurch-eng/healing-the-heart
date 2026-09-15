@@ -4,6 +4,7 @@ const classId = String(Astro.params.id ?? '');
 ---
 <BaseLayout title="Private Class Student List | Healing the Heart">
   <main class="roster-page" data-class-id={classId}>
+    <link rel="stylesheet" href="/roster-redesign.css" />
     <section class="roster-card" id="gate">
       <p class="eyebrow">Private class page</p>
       <h1>Class student list</h1>
