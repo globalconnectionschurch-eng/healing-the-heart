@@ -1,0 +1,8 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+const faqs=[['Do I need to know exactly what is wrong before I come?','No. You may simply know that something is hurting, something feels stuck, or your relationships are being affected. You can begin from there.'],['Is this a counselling service?','Healing the Heart is presented as a Christ-centred healing journey built around teaching, reflection, prayer, safe relationships, and personal participation. It should not be represented as a replacement for professional care when that care is needed.'],['Will I be judged for what I share?','The intended atmosphere is confidential, compassionate, and free from judgment. You are not expected to pretend that you are okay.'],['Do I have to share everything?','The journey invites honesty, but no website page should promise or pressure someone to disclose more than they are ready to share.'],['How do I register for a class?','Current registration information will be posted with each confirmed class. If no class is currently listed, please contact the ministry for the next opportunity.']];
+---
+<BaseLayout title="Frequently Asked Questions | Healing the Heart">
+<section class="page-hero"><div class="page-hero-inner"><p class="eyebrow">Questions are welcome</p><h1>Frequently asked questions</h1><p>It is okay to have questions before taking a step. Here are some of the things people may wonder about.</p></div></section>
+<section class="section"><div class="rich-section">{faqs.map(([q,a])=><details class="faq-item"><summary>{q}</summary><p>{a}</p></details>)}</div></section>
+</BaseLayout>
