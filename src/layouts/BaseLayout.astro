@@ -1,0 +1,54 @@
+---
+import '../styles/global.css';
+const { title = 'Healing the Heart', description = 'A Christ-centred journey toward healing, truth, restoration, and freedom.' } = Astro.props;
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Healing the Heart home">
+        <span class="brand-heart">♥</span>
+        <span class="brand-name">HEALING <i>THE</i> HEART</span>
+      </a>
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a href="/journey">The Journey</a>
+        <a href="/what-we-help-with">What We Help With</a>
+        <a href="/classes">Classes</a>
+        <a href="/about">Our Story</a>
+        <a class="nav-cta" href="/register">Take the Next Step</a>
+      </nav>
+      <details class="mobile-menu">
+        <summary aria-label="Open menu">Menu</summary>
+        <div class="mobile-links">
+          <a href="/journey">The Journey</a>
+          <a href="/what-we-help-with">What We Help With</a>
+          <a href="/classes">Classes</a>
+          <a href="/what-to-expect">What to Expect</a>
+          <a href="/about">Our Story</a>
+          <a href="/faq">FAQ</a>
+          <a href="/contact">Contact</a>
+          <a class="nav-cta" href="/register">Take the Next Step</a>
+        </div>
+      </details>
+    </header>
+    <main><slot /></main>
+    <footer class="site-footer">
+      <div>
+        <div class="footer-brand">Healing the Heart</div>
+        <p>A Christ-centred journey toward healing and restoration.</p>
+      </div>
+      <div class="footer-links">
+        <a href="/journey">Journey</a>
+        <a href="/classes">Classes</a>
+        <a href="/faq">FAQ</a>
+        <a href="/contact">Contact</a>
+        <a href="/register">Register</a>
+      </div>
+    </footer>
+  </body>
+</html>
