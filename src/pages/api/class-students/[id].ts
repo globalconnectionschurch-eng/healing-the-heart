@@ -13,7 +13,7 @@ export const GET: APIRoute = async ({ request, params }) => {
     SELECT s.name,s.email,s.phone,s.address,s.date_of_birth,s.marital_status,s.church,s.sr_pastor,s.how_heard,s.goals,s.smoking_drinking,s.anything_else,
            r.source,r.payment_status,r.status,r.registered_at,r.verification_code
     FROM registrations r JOIN students s ON s.id=r.student_id
-    WHERE r.class_id=? AND r.status='registered' ORDER BY s.name COLLATE NOCASE
+    WHERE r.class_id=? AND r.status IN ('registered','pending_payment') ORDER BY s.name COLLATE NOCASE
   `).bind(classId).all();
   return json({ class: { id: classRow.id, title: classRow.title, startDate: classRow.start_date, endDate: classRow.end_date, schedule: classRow.schedule, locationName: classRow.location_name, locationAddress: classRow.location_address }, students });
 };
