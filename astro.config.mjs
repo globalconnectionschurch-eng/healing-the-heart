@@ -4,5 +4,6 @@ import cloudflare from '@astrojs/cloudflare';
 export default defineConfig({
   output: 'server',
   adapter: cloudflare(),
-  site: 'https://healingtheheart.ca'
+  site: 'https://healingtheheart.ca',
+  session: false
 });
