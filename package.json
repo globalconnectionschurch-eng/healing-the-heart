@@ -1,19 +1,22 @@
 {
   "name": "healing-the-heart",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "astro check",
+    "db:migrate": "wrangler d1 migrations apply healing-the-heart --remote"
   },
   "dependencies": {
     "@astrojs/cloudflare": "latest",
     "astro": "latest"
   },
   "devDependencies": {
-    "typescript": "latest"
+    "@cloudflare/workers-types": "latest",
+    "typescript": "latest",
+    "wrangler": "latest"
   }
 }
