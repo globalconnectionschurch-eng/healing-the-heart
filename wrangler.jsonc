@@ -3,7 +3,9 @@
   "name": "healing-the-heart",
   "main": "@astrojs/cloudflare/entrypoints/server",
   "compatibility_date": "2026-09-15",
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
+    "binding": "ASSETS",
     "directory": "./dist"
   },
   "d1_databases": [
