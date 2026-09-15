@@ -1,13 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { classTypePresets } from '../data/class-types';
 ---
 <BaseLayout title="Registration | Healing the Heart">
   <section class="page-hero"><div class="page-hero-inner"><p class="eyebrow">Take your next step</p><h1>Registration</h1><p>You’re taking a powerful step toward healing, and we’re excited to walk this journey with you. Fill out the form below, and a facilitator will reach out with next steps.</p></div></section>
   <section class="section">
     <form class="registration-form" method="post" action="/api/register">
+      <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true" />
       <label>Name<input name="name" required autocomplete="name" /></label>
-      <label>Selected Your Course/Class<select name="classType" required><option value="">Select a class</option>{classTypePresets.map((type) => <option value={type.id}>{type.name}</option>)}</select></label>
+      <label>Selected Your Course/Class<select id="class-select" name="classId" required><option value="">Loading current classes…</option></select></label>
       <label>Email Address<input type="email" name="email" required autocomplete="email" placeholder="We’ll contact you here for class/course info." /></label>
       <label>Phone<input type="tel" name="phone" autocomplete="tel" placeholder="Calls for urgent matters (class changes ETC)" /></label>
       <label>Address<input name="address" autocomplete="street-address" placeholder="Address (for sending reports and course material)" /></label>
@@ -20,8 +20,37 @@ import { classTypePresets } from '../data/class-types';
       <label>Do you have any smoking or drinking concern? (Our facilities are smoke and alcohol free)<textarea name="smokingDrinking" placeholder="Sharing this helps us support you better."></textarea></label>
       <label>Anything else you'd like to share to help up support your healing journey?<textarea name="anythingElse" placeholder="Share anything that helps us support you."></textarea></label>
       <label>Verification Code <span class="field-note">(For those who were gifted this class or prepaid)</span><input name="verificationCode" placeholder="Please enter your Verification Code" /></label>
-      <p class="form-note">After submitting your form, we’ll email you instructions for completing your course payment. You can also use the payment option provided on the next step.</p>
+      <p class="form-note">After submitting your form, we’ll email you instructions for completing your course payment. Your facilitator may also contact you if anything needs clarification.</p>
       <button class="button primary" type="submit">Submit Registration</button>
     </form>
+    <div id="registration-status" class="placeholder" hidden></div>
   </section>
+  <script is:inline>
+    const select = document.querySelector('#class-select');
+    const status = document.querySelector('#registration-status');
+    const loadClasses = async () => {
+      try {
+        const response = await fetch('/api/classes');
+        const data = await response.json();
+        select.innerHTML = '<option value="">Select a current class</option>';
+        for (const item of data.classes ?? []) {
+          const option = document.createElement('option');
+          option.value = item.id;
+          const price = Number(item.price_cents || 0) ? ` · $${(Number(item.price_cents) / 100).toFixed(2)}` : '';
+          option.textContent = `${item.title} · ${item.start_date} – ${item.end_date}${price}`;
+          select.appendChild(option);
+        }
+        if (!(data.classes ?? []).length) {
+          select.innerHTML = '<option value="">No classes are currently open</option>';
+        }
+      } catch {
+        select.innerHTML = '<option value="">Classes are temporarily unavailable</option>';
+      }
+    };
+    loadClasses();
+    if (new URLSearchParams(location.search).get('success') === '1') {
+      status.hidden = false;
+      status.textContent = 'Thank you. Your registration has been received.';
+    }
+  </script>
 </BaseLayout>
