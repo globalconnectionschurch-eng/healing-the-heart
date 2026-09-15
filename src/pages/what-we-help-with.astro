@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+const topics=['Childhood wounds and unmet emotional needs','Rejection, abandonment, betrayal, or powerlessness','Grief and unresolved losses','Broken trust and unforgiveness','Shame and hidden pain','Anger, fear, isolation, or emotional numbness','Harmful coping patterns','Codependency or attempts to control life and relationships','Difficulty receiving love, affirmation, security, or belonging','A hardened or “stony” heart developed through self-protection'];
+---
+<BaseLayout title="What We Help With | Healing the Heart">
+<section class="page-hero"><div class="page-hero-inner"><p class="eyebrow">You may recognize yourself here</p><h1>What we help with</h1><p>You don't need the perfect words for what hurts. Sometimes we simply know that something inside us is not okay.</p></div></section>
+<section class="section"><div class="rich-section"><h2>Sometimes pain changes the way we live.</h2><p>Unresolved wounds can affect the way we think, feel, relate, trust, receive love, and protect ourselves. This journey creates space to understand those places without shame.</p><ul class="list-clean">{topics.map(topic=><li>{topic}</li>)}</ul><p>Recognizing yourself in these words does not mean you are broken beyond repair. It means there may be something worth bringing into the light.</p></div></section>
+<section class="statement-band"><p>What happened to you matters. You don't have to carry it alone.</p></section>
+</BaseLayout>
