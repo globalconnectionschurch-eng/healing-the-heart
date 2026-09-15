@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 <BaseLayout title="Registration | Healing the Heart">
   <section class="page-hero"><div class="page-hero-inner"><p class="eyebrow">Take your next step</p><h1>Registration</h1><p>You’re taking a powerful step toward healing, and we’re excited to walk this journey with you. Fill out the form below, and a facilitator will reach out with next steps.</p></div></section>
   <section class="section">
-    <form class="registration-form" method="post" action="/api/register">
+    <form id="registration-form" class="registration-form" method="post" action="/api/register">
       <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true" />
       <label>Name<input name="name" required autocomplete="name" /></label>
       <label>Selected Your Course/Class<select id="class-select" name="classId" required><option value="">Loading current classes…</option></select></label>
@@ -23,11 +23,36 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <p class="form-note">After submitting your form, we’ll email you instructions for completing your course payment. Your facilitator may also contact you if anything needs clarification.</p>
       <button class="button primary" type="submit">Submit Registration</button>
     </form>
-    <div id="registration-status" class="placeholder" hidden></div>
+
+    <div id="registration-success" class="registration-result" hidden>
+      <p class="eyebrow">Registration received</p>
+      <h2>You’re registered for the next step.</h2>
+      <p id="success-message">Thank you. Your registration has been successfully submitted.</p>
+      <div id="payment-next-step" hidden>
+        <p><strong>Your registration is saved.</strong> When you're ready, proceed to the payment page to complete your registration.</p>
+        <a id="payment-link" class="button primary" href="#">Proceed to payment</a>
+      </div>
+      <p id="paid-next-step" hidden>Payment has already been recorded for this registration. Your class information will be sent by email.</p>
+    </div>
+
+    <div id="registration-error" class="registration-result error" hidden>
+      <p class="eyebrow">We need to try that again</p>
+      <h2>Your registration was not completed.</h2>
+      <p id="error-message">Please check your information and try again.</p>
+      <button id="try-again" class="button outline" type="button">Return to registration</button>
+    </div>
   </section>
   <script is:inline>
+    const form = document.querySelector('#registration-form');
     const select = document.querySelector('#class-select');
-    const status = document.querySelector('#registration-status');
+    const success = document.querySelector('#registration-success');
+    const errorBox = document.querySelector('#registration-error');
+    const errorMessage = document.querySelector('#error-message');
+    const paymentNext = document.querySelector('#payment-next-step');
+    const paymentLink = document.querySelector('#payment-link');
+    const paidNext = document.querySelector('#paid-next-step');
+    const successMessage = document.querySelector('#success-message');
+
     const loadClasses = async () => {
       try {
         const response = await fetch('/api/classes');
@@ -40,17 +65,63 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           option.textContent = `${item.title} · ${item.start_date} – ${item.end_date}${price}`;
           select.appendChild(option);
         }
-        if (!(data.classes ?? []).length) {
-          select.innerHTML = '<option value="">No classes are currently open</option>';
-        }
+        if (!(data.classes ?? []).length) select.innerHTML = '<option value="">No classes are currently open</option>';
+        const requestedClass = new URLSearchParams(location.search).get('classId');
+        if (requestedClass && [...select.options].some((option) => option.value === requestedClass)) select.value = requestedClass;
       } catch {
         select.innerHTML = '<option value="">Classes are temporarily unavailable</option>';
       }
     };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      button.textContent = 'Submitting…';
+      success.hidden = true;
+      errorBox.hidden = true;
+      try {
+        const response = await fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin' });
+        if (!response.ok) {
+          let message = 'We could not complete your registration. Please try again.';
+          try { const data = await response.json(); message = data.error || message; } catch {}
+          throw new Error(message);
+        }
+        const destination = response.url || '';
+        const paymentMatch = destination.match(/\/payment\?registration=([^&]+)/);
+        const successMatch = destination.includes('/register?success=1');
+        if (paymentMatch) {
+          paymentLink.href = `/payment?registration=${paymentMatch[1]}`;
+          paymentNext.hidden = false;
+          paidNext.hidden = true;
+          successMessage.textContent = 'Thank you. Your registration has been successfully submitted.';
+        } else if (successMatch) {
+          paymentNext.hidden = true;
+          paidNext.hidden = true;
+          successMessage.textContent = 'Thank you. Your registration has been successfully submitted.';
+        }
+        form.hidden = true;
+        success.hidden = false;
+        window.scrollTo({ top: success.offsetTop - 80, behavior: 'smooth' });
+      } catch (error) {
+        errorMessage.textContent = error instanceof Error ? error.message : 'We could not complete your registration. Please try again.';
+        errorBox.hidden = false;
+        button.disabled = false;
+        button.textContent = 'Submit Registration';
+        window.scrollTo({ top: errorBox.offsetTop - 80, behavior: 'smooth' });
+      }
+    });
+
+    document.querySelector('#try-again').addEventListener('click', () => {
+      errorBox.hidden = true;
+      form.hidden = false;
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
     loadClasses();
-    if (new URLSearchParams(location.search).get('success') === '1') {
-      status.hidden = false;
-      status.textContent = 'Thank you. Your registration has been received.';
-    }
   </script>
+  <style>
+    .registration-result{max-width:760px;margin:2rem auto 0;padding:2.5rem;border:1px solid var(--line,#ddd);border-radius:24px;background:var(--surface,#fff);box-shadow:0 16px 50px rgba(0,0,0,.06)}
+    .registration-result h2{margin:.25rem 0 1rem}.registration-result p{max-width:620px}.registration-result.error{border-color:#d9a0a0}.registration-result .button{margin-top:1rem}
+  </style>
 </BaseLayout>
