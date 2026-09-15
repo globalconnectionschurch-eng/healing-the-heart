@@ -2,6 +2,24 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout title="Contact | Healing the Heart">
-<section class="page-hero"><div class="page-hero-inner"><p class="eyebrow">Questions are welcome</p><h1>Let's talk.</h1><p>If you are wondering whether Healing the Heart may be right for you, you don't have to figure it out alone.</p></div></section>
-<section class="section"><div class="rich-section"><div class="placeholder"><strong>Contact form coming soon.</strong><br />The correct ministry email, form fields, response expectations, and contact details will be connected once confirmed.</div><h2 style="margin-top:4rem">A safe first conversation.</h2><p>You can ask about the journey, upcoming classes, registration, returning participants, or anything else you need clarified before taking a step.</p></div></section>
+<section class="page-hero"><div class="page-hero-inner"><p class="eyebrow">Questions are welcome</p><h1>Let's talk.</h1><p>If you're wondering whether Healing the Heart may be right for you, you don't have to figure it out alone.</p></div></section>
+<section class="section contact-section"><div class="contact-grid">
+  <div class="contact-copy"><p class="eyebrow">A safe first conversation</p><h2>Start with a question.</h2><p>Ask about the journey, upcoming classes, registration, returning participants, or anything you need clarified before taking a step.</p><div class="contact-card"><span class="contact-label">Email</span><a href="mailto:healingtheheart.ca@gmail.com">healingtheheart.ca@gmail.com</a><p>We'll get back to you as soon as we can.</p></div></div>
+  <form id="contact-form" class="contact-form" method="post" action="/api/contact">
+    <input type="text" name="website" tabindex="-1" autocomplete="off" class="honeypot" aria-hidden="true" />
+    <label>Your name<input name="name" required autocomplete="name" /></label>
+    <label>Email address<input type="email" name="email" required autocomplete="email" /></label>
+    <label>What can we help with?<select name="topic"><option>General question</option><option>Upcoming classes</option><option>Registration</option><option>Returning participant</option><option>Something else</option></select></label>
+    <label>Message<textarea name="message" required placeholder="Tell us what you'd like to know."></textarea></label>
+    <button class="button primary" type="submit">Send message</button>
+    <p id="contact-status" class="form-status" hidden></p>
+  </form>
+</div></section>
+<script is:inline>
+const form=document.querySelector('#contact-form');const status=document.querySelector('#contact-status');
+form.addEventListener('submit',async(e)=>{e.preventDefault();const b=form.querySelector('button');b.disabled=true;b.textContent='Sending…';status.hidden=true;try{const r=await fetch(form.action,{method:'POST',body:new FormData(form)});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'We could not send your message. Please try again.');form.reset();status.textContent='Thank you. Your message has been sent.';status.hidden=false}catch(err){status.textContent=err instanceof Error?err.message:'We could not send your message. Please try again.';status.hidden=false}finally{b.disabled=false;b.textContent='Send message'}});
+</script>
+<style>
+.contact-section{padding-top:4rem}.contact-grid{max-width:1050px;margin:0 auto;display:grid;grid-template-columns:.9fr 1.1fr;gap:5rem;align-items:start}.contact-copy h2{font-size:clamp(2rem,4vw,3.2rem);margin:.25rem 0 1rem}.contact-copy>p{max-width:500px;color:#666}.contact-card{margin-top:2rem;padding:1.5rem;border:1px solid #e1ddd6;border-radius:18px;background:#faf8f5}.contact-label{display:block;text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:#777;margin-bottom:.4rem}.contact-card a{font-size:1.05rem;font-weight:650}.contact-card p{margin:.45rem 0 0;color:#777;font-size:.9rem}.contact-form{padding:2rem;border:1px solid #e1ddd6;border-radius:24px;background:#fff;box-shadow:0 18px 55px rgba(0,0,0,.06)}.contact-form label{display:grid;gap:.45rem;margin-bottom:1.2rem;font-weight:600}.contact-form input,.contact-form select,.contact-form textarea{font:inherit;font-weight:400;padding:.9rem 1rem;border:1px solid #d5d0c8;border-radius:12px;background:#fff;box-sizing:border-box;width:100%}.contact-form textarea{min-height:160px;resize:vertical}.contact-form .button{margin-top:.3rem}.honeypot{position:absolute;left:-9999px}.form-status{margin:1rem 0 0;padding:.9rem 1rem;border-radius:12px;background:#f5f2ed}@media(max-width:760px){.contact-grid{grid-template-columns:1fr;gap:2.5rem}.contact-form{padding:1.4rem}}
+</style>
 </BaseLayout>
