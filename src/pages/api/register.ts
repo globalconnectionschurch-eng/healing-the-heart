@@ -6,6 +6,21 @@ import { fillTemplate, id, json, nowIso, sendEmail } from '../../lib/server';
 export const prerender = false;
 const text = (form: FormData, key: string) => String(form.get(key) ?? '').trim();
 
+async function sendEightWeekEmail(classRow: any, student: any, registrationId: string, now: string) {
+  if (classRow.type_id !== 'eight-week-in-person') return;
+  const saved = await env.DB.prepare('SELECT * FROM email_templates WHERE system_key=?').bind('eight-week-class-details').first<any>();
+  const fallback = emailTemplates.find((item) => item.id === 'eight-week-class-details')!;
+  const subjectTemplate = saved?.subject ?? fallback.subject;
+  const bodyTemplate = saved?.body ?? fallback.body;
+  const values = {
+    firstName: student.name.split(/\s+/)[0], classTitle: classRow.title, locationName: classRow.location_name || '', locationAddress: classRow.location_address || '', schedule: classRow.schedule || '', dateRange: `${classRow.start_date} – ${classRow.end_date}`, parking: classRow.parking || '', whereToGo: classRow.where_to_go || '', contactEmail: env.CONTACT_EMAIL, siteUrl: env.SITE_URL, paymentInstructions: 'Your payment has been received.'
+  };
+  const subject = fillTemplate(subjectTemplate, values);
+  const message = fillTemplate(bodyTemplate, values);
+  const sent = await sendEmail(student.email, subject, message);
+  await env.DB.prepare(`INSERT INTO email_logs (id,template_id,class_id,student_id,recipient_email,subject,status,provider_message_id,error,sent_at) VALUES (?,?,?,?,?,?,?,?,?,?)`).bind(id('email'), saved?.id ?? fallback.id, classRow.id, student.id, student.email, subject, sent.sent ? 'sent' : 'failed', sent.messageId ?? null, sent.error ?? null, now).run();
+}
+
 export const POST: APIRoute = async ({ request }) => {
   const form = await request.formData();
   if (text(form, 'website')) return new Response(null, { status: 204 });
@@ -38,27 +53,26 @@ export const POST: APIRoute = async ({ request }) => {
     ).run();
   }
 
+  const isPrepaid = Boolean(verificationCode);
+  const isFree = Number(classRow.price_cents || 0) <= 0;
+  const paymentStatus = isPrepaid || isFree ? 'paid' : 'pending';
+  const registrationStatus = isPrepaid || isFree ? 'registered' : 'pending_payment';
+  let registrationId = existingRegistration?.id as string | undefined;
   if (existingRegistration) {
-    await env.DB.prepare(`UPDATE registrations SET source='online',verification_code=?,payment_status=?,status='registered',registered_at=? WHERE id=?`).bind(
-      verificationCode, verificationCode ? 'paid' : existingRegistration.payment_status, now, existingRegistration.id
+    await env.DB.prepare(`UPDATE registrations SET source='online',verification_code=?,payment_status=?,status=?,registered_at=? WHERE id=?`).bind(
+      verificationCode, paymentStatus, registrationStatus, now, registrationId
     ).run();
   } else {
+    registrationId = id('registration');
     await env.DB.prepare(`INSERT INTO registrations (id,class_id,student_id,source,verification_code,payment_status,status,registered_at) VALUES (?,?,?,?,?,?,?,?)`).bind(
-      id('registration'),classId,actualStudentId,'online',verificationCode,verificationCode ? 'paid' : 'pending','registered',now
+      registrationId,classId,actualStudentId,'online',verificationCode,paymentStatus,registrationStatus,now
     ).run();
   }
 
-  if (classRow.type_id === 'eight-week-in-person') {
-    const saved = await env.DB.prepare('SELECT * FROM email_templates WHERE system_key=?').bind('eight-week-class-details').first<any>();
-    const fallback = emailTemplates.find((item) => item.id === 'eight-week-class-details')!;
-    const subject = saved?.subject ?? fallback.subject;
-    const message = fillTemplate(saved?.body ?? fallback.body, {
-      firstName:name.split(/\s+/)[0],classTitle:classRow.title,locationName:classRow.location_name||'',locationAddress:classRow.location_address||'',schedule:classRow.schedule||'',dateRange:`${classRow.start_date} – ${classRow.end_date}`,parking:classRow.parking||'',whereToGo:classRow.where_to_go||'',contactEmail:env.CONTACT_EMAIL,siteUrl:env.SITE_URL
-    });
-    const sent = await sendEmail(email,fillTemplate(subject,{classTitle:classRow.title}),message);
-    await env.DB.prepare(`INSERT INTO email_logs (id,template_id,class_id,student_id,recipient_email,subject,status,provider_message_id,error,sent_at) VALUES (?,?,?,?,?,?,?,?,?,?)`).bind(
-      id('email'),saved?.id??fallback.id,classId,actualStudentId,email,subject,sent.sent?'sent':'failed',sent.messageId??null,sent.error??null,now
-    ).run();
+  if (paymentStatus === 'paid') {
+    await sendEightWeekEmail(classRow, { id: actualStudentId, name, email }, registrationId!, now);
+    return new Response(null,{status:303,headers:{location:'/register?success=1'}});
   }
-  return new Response(null,{status:303,headers:{location:'/register?success=1'}});
+
+  return new Response(null,{status:303,headers:{location:`/payment?registration=${encodeURIComponent(registrationId!)}`}});
 };
