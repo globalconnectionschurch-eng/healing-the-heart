@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "healing-the-heart",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2026-09-15",
+  "assets": {
+    "directory": "./dist"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "healing-the-heart",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+    }
+  ],
+  "vars": {
+    "SITE_URL": "https://healingtheheart.ca",
+    "FROM_EMAIL": "Healing the Heart <healingtheheart.ca@gmail.com>",
+    "CONTACT_EMAIL": "healingtheheart.ca@gmail.com"
+  }
+}
