@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
+import { classTypePresets } from '../../../data/class-types';
 import { hashClassPassword, isAdminRequest, id, json, nowIso } from '../../../lib/server';
 
 export const prerender = false;
@@ -34,11 +35,16 @@ export const POST: APIRoute = async ({ request }) => {
   const endDate = String(data.endDate).slice(0, 10);
   if (endDate < startDate) return json({ error: 'End date cannot be before the start date.' }, 400);
 
+  const preset = classTypePresets.find((item) => item.id === String(data.typeId));
+  const rawPrice = String(data.price ?? '').trim();
+  const priceCents = rawPrice ? Math.round(Number(rawPrice) * 100) : (preset?.defaultPriceCents ?? 0);
+  if (!Number.isFinite(priceCents) || priceCents < 0) return json({ error: 'Enter a valid price.' }, 400);
+
   const classId = id('class');
   const now = nowIso();
   await env.DB.prepare(`INSERT INTO classes (id,type_id,title,description,start_date,end_date,price_cents,capacity,schedule,location_name,location_address,parking,where_to_go,what_to_bring,notes,payment_url,created_at,updated_at)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
-    classId, data.typeId, data.title, data.description ?? '', startDate, endDate, Math.round(Number(data.price ?? 0) * 100), data.capacity ? Number(data.capacity) : null,
+    classId, data.typeId, data.title, data.description ?? '', startDate, endDate, priceCents, data.capacity ? Number(data.capacity) : null,
     data.schedule ?? '', data.locationName ?? '', data.locationAddress ?? '', data.parking ?? '', data.whereToGo ?? '', data.whatToBring ?? '', data.notes ?? '', data.paymentUrl ?? '', now, now
   ).run();
 
