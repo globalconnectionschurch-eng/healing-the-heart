@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS students (
   goals TEXT,
   smoking_drinking TEXT,
   anything_else TEXT,
+  mass_email_opt_out INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
