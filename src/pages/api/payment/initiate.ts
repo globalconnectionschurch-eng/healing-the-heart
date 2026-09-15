@@ -24,7 +24,7 @@ export const POST: APIRoute = async ({ request }) => {
     const environment = String(env.MONERIS_ENV ?? 'qa').trim() === 'prod' ? 'prod' : 'qa';
     if (!storeId || !apiToken || !checkoutId) return json({ error: 'Moneris payment is not configured yet.' }, 503);
 
-    const orderNo = `HTH-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+    const orderNo = `HTH${Date.now()}${crypto.randomUUID().slice(0, 8)}`;
     const endpoint = environment === 'prod'
       ? 'https://gateway.moneris.com/chktv2/request/request.php'
       : 'https://gatewayt.moneris.com/chktv2/request/request.php';
@@ -33,11 +33,14 @@ export const POST: APIRoute = async ({ request }) => {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ store_id: storeId, api_token: apiToken, checkout_id: checkoutId, txn_total: (amountCents / 100).toFixed(2), environment, action: 'preload', order_no: orderNo, cust_id: row.student_id })
     });
-    const data = await response.json() as any;
+    const rawText = await response.text();
+    let data: any;
+    try { data = JSON.parse(rawText); } catch { data = { raw: rawText.slice(0, 1000) }; }
     const ticket = String(data?.ticket ?? data?.response?.ticket ?? '').trim();
     if (!response.ok || !ticket) {
-      await env.DB.prepare('UPDATE registrations SET payment_error=? WHERE id=?').bind(JSON.stringify(data).slice(0, 2000), registrationId).run();
-      return json({ error: 'Moneris could not start the payment. Please try again.' }, 502);
+      const diagnostic = JSON.stringify(data).slice(0, 1200);
+      await env.DB.prepare('UPDATE registrations SET payment_error=? WHERE id=?').bind(`HTTP ${response.status}: ${diagnostic}`, registrationId).run();
+      return json({ error: 'Moneris could not start the payment. Please try again.', diagnostic: environment === 'qa' ? `Moneris response (HTTP ${response.status}): ${diagnostic}` : undefined }, 502);
     }
 
     await env.DB.prepare('UPDATE registrations SET payment_order_no=?,payment_ticket=?,payment_error=NULL WHERE id=?').bind(orderNo, ticket, registrationId).run();
