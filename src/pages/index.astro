@@ -1,98 +1,47 @@
 ---
-import '../styles/global.css';
+import BaseLayout from '../layouts/BaseLayout.astro';
 ---
+<BaseLayout title="Healing the Heart | You don't have to carry it alone">
+  <section class="hero hero-home">
+    <div class="hero-image-placeholder" aria-hidden="true"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="eyebrow light">A safe place for healing</p>
+      <h1>You don't have to carry it alone.</h1>
+      <p class="hero-copy">A Christ-centred journey where you can honestly face the wounds of your past, discover truth, and allow Jesus to bring healing and restoration.</p>
+      <div class="actions"><a class="button primary" href="/journey">Explore the journey</a><a class="button ghost" href="/what-to-expect">What to expect</a></div>
+    </div>
+  </section>
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="description" content="Healing the Heart — a Christ-centred journey toward healing, truth, restoration, and freedom." />
-    <title>Healing the Heart</title>
-  </head>
-  <body>
-    <header class="site-header">
-      <a class="brand" href="/" aria-label="Healing the Heart home">
-        <span class="brand-mark">♥</span>
-        <span>HEALING THE HEART</span>
-      </a>
-      <nav>
-        <a href="#journey">Your Journey</a>
-        <a href="#classes">Classes</a>
-        <a href="#about">About</a>
-      </nav>
-    </header>
+  <section class="welcome section">
+    <div class="narrow center">
+      <p class="eyebrow">Before anything else</p>
+      <h2>You are safe here.</h2>
+      <p class="lead">You don't need to pretend you are okay.</p>
+      <p>What happened to you matters. You don't have to be ashamed of the places in your heart that still hurt, and you don't have to rush through them.</p>
+      <p>Healing is a journey of bringing what has been hidden into the light, replacing lies with truth, and discovering that <strong>Jesus is not frightened by your pain.</strong></p>
+    </div>
+  </section>
 
-    <main>
-      <section class="hero">
-        <div class="hero-glow"></div>
-        <div class="hero-content">
-          <p class="eyebrow">A safe place for healing</p>
-          <h1>You don't have to carry it alone.</h1>
-          <p class="hero-copy">
-            Healing the Heart is a Christ-centred journey where you can honestly face the wounds of your past, discover truth, and allow Jesus to bring healing and restoration.
-          </p>
-          <div class="actions">
-            <a class="button primary" href="#journey">Explore the journey</a>
-            <a class="button secondary" href="#classes">View classes</a>
-          </div>
-        </div>
-      </section>
+  <section class="statement-band"><p>Maybe healing really is possible.</p></section>
 
-      <section class="welcome section">
-        <div class="narrow">
-          <p class="eyebrow">Welcome</p>
-          <h2>You are safe here.</h2>
-          <p>
-            You don't need to pretend you are okay. What happened to you matters, and you don't have to be ashamed of the places in your heart that still hurt.
-          </p>
-          <p>
-            Healing is not about rushing, fixing, or forgetting. It is a journey of bringing what has been hidden into the light, replacing lies with truth, and discovering that Jesus is not frightened by your pain.
-          </p>
-        </div>
-      </section>
+  <section class="section journey-preview">
+    <div class="section-heading"><p class="eyebrow">The Healing &amp; Restoring the Heart journey</p><h2>There is a reason your heart learned to protect itself.</h2><p>We make room to understand what happened, what it changed, and what Jesus can restore.</p></div>
+    <div class="cards four">
+      <a class="feature-card" href="/journey"><span>01</span><h3>A Safe Place</h3><p>Confidentiality, compassion, trust, honesty, and freedom from judgment.</p></a>
+      <a class="feature-card" href="/journey#stony-heart"><span>02</span><h3>Understanding the Heart</h3><p>Explore how pain can cause us to harden, disconnect, protect, or stop trusting.</p></a>
+      <a class="feature-card" href="/journey#loss"><span>03</span><h3>Grieving What Was Lost</h3><p>Give words to losses rather than burying or minimizing them.</p></a>
+      <a class="feature-card" href="/journey#restoration"><span>04</span><h3>Truth &amp; Restoration</h3><p>Move toward healthy trust, identity, freedom, and wholeness.</p></a>
+    </div>
+    <div class="center"><a class="text-link" href="/journey">See the full journey →</a></div>
+  </section>
 
-      <section id="journey" class="journey section">
-        <div class="section-heading">
-          <p class="eyebrow">The healing journey</p>
-          <h2>From wounded places toward wholeness.</h2>
-          <p>Through teaching, reflection, prayer, honest conversation, and safe community, we make space for Jesus to restore what has been wounded.</p>
-        </div>
-        <div class="steps">
-          <article><span>01</span><h3>A Safe Place</h3><p>Confidentiality, compassion, trust, honesty, and freedom from judgment.</p></article>
-          <article><span>02</span><h3>Understanding the Heart</h3><p>Discover how pain and unmet needs can shape the ways we protect ourselves.</p></article>
-          <article><span>03</span><h3>Facing What Was Lost</h3><p>Learn to acknowledge pain, grieve losses, and bring buried places into the light.</p></article>
-          <article><span>04</span><h3>Truth & Restoration</h3><p>Replace the lies with God's truth and begin rebuilding trust, identity, and freedom.</p></article>
-        </div>
-      </section>
+  <section class="dark-section section">
+    <div class="section-heading"><p class="eyebrow light">What this is about</p><h2>Not fixing you. Walking with you.</h2><p>There are no spectators. The journey invites honest participation through teaching, reflection, prayer, journaling, small-group ministry, and safe relationships.</p></div>
+    <div class="pillars"><div><b>Jesus</b><span>Our hope is rooted in Him.</span></div><div><b>Truth</b><span>We make space to recognize the lies pain can teach us.</span></div><div><b>Community</b><span>Healing does not have to happen in isolation.</span></div></div>
+  </section>
 
-      <section id="classes" class="classes section">
-        <div class="section-heading">
-          <p class="eyebrow">Take the next step</p>
-          <h2>Healing happens one honest step at a time.</h2>
-          <p>Upcoming classes and healing opportunities will be shared here.</p>
-        </div>
-        <div class="placeholder-card">
-          <p class="eyebrow">Coming soon</p>
-          <h3>Classes & upcoming dates</h3>
-          <p>Current schedules, registration information, and details will be added as they are confirmed.</p>
-          <a class="button primary" href="#">Registration</a>
-        </div>
-      </section>
-
-      <section id="about" class="about section">
-        <div class="about-panel">
-          <div>
-            <p class="eyebrow">The heart behind Healing the Heart</p>
-            <h2>Healed people help bring healing to others.</h2>
-          </div>
-          <p>Our desire is to create a place where people can be honest about their story, encounter biblical truth, receive compassionate support, and experience the hope of restoration through Jesus.</p>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <span>Healing the Heart</span>
-      <span>A Christ-centred journey toward healing and restoration.</span>
-    </footer>
-  </body>
-</html>
+  <section class="section next-step">
+    <div class="split-callout"><div><p class="eyebrow">Your next step</p><h2>You can take one small step.</h2></div><div><p>Learn about the journey, see what a class is like, or find upcoming opportunities when dates are available.</p><div class="actions left"><a class="button primary" href="/classes">View classes</a><a class="button outline" href="/contact">Ask a question</a></div></div></div>
+  </section>
+</BaseLayout>
