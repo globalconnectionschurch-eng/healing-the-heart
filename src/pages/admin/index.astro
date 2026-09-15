@@ -4,20 +4,17 @@ import { classTypePresets } from '../../data/class-types';
 import { isAdminRequest } from '../../lib/server';
 
 if (!(await isAdminRequest(Astro.request))) return Astro.redirect('/admin-login');
-const presetNames = Object.fromEntries(classTypePresets.map((type) => [type.id, type.name]));
+const presetData = Object.fromEntries(classTypePresets.map((type) => [type.id, type]));
 ---
 <BaseLayout title="Admin | Healing the Heart">
-  <section class="admin-shell" id="admin-root" data-preset-names={JSON.stringify(presetNames)}>
+  <section class="admin-shell" id="admin-root" data-preset-data={JSON.stringify(presetData)}>
     <div class="admin-header">
       <div>
         <p class="eyebrow">Healing the Heart</p>
         <h1>Admin dashboard</h1>
         <p>Classes, registrations, students, and email communication.</p>
       </div>
-      <div class="actions">
-        <a class="button outline" href="/">View website</a>
-        <button class="button outline" id="logout">Sign out</button>
-      </div>
+      <div class="actions"><a class="button outline" href="/">View website</a><button class="button outline" id="logout">Sign out</button></div>
     </div>
 
     <div class="admin-actions">
@@ -38,8 +35,8 @@ const presetNames = Object.fromEntries(classTypePresets.map((type) => [type.id, 
         <div class="form-grid">
           <label>Class name<input id="class-name" name="title" required placeholder="Auto-filled from class type" /></label>
           <label>Price<input name="price" type="number" min="0" step="0.01" placeholder="0.00" /></label>
-          <label>Start date<input name="startDate" type="date" required /></label>
-          <label>End date<input name="endDate" type="date" required /></label>
+          <label>Start date<input id="start-date" name="startDate" type="date" required /></label>
+          <label>End date<input id="end-date" name="endDate" type="date" required /></label>
           <label>Class/session time<input name="schedule" placeholder="e.g. Thursdays, 7:30 PM – 9:30 PM" /></label>
           <label>Capacity<input name="capacity" type="number" min="1" placeholder="Optional" /></label>
         </div>
@@ -51,8 +48,9 @@ const presetNames = Object.fromEntries(classTypePresets.map((type) => [type.id, 
           <label>Parking<input name="parking" placeholder="Parking instructions" /></label>
           <label>Where to go<input name="whereToGo" placeholder="Main auditorium, room, etc." /></label>
         </div>
-        <label>Class description<textarea name="description" rows="4"></textarea></label>
-        <label>Admin notes<textarea name="notes" rows="3"></textarea></label>
+        <label>Payment link <span class="field-note">Optional — add the checkout URL for this class.</span><input name="paymentUrl" type="url" placeholder="https://…" /></label>
+        <label>Class description<textarea id="class-description" name="description" rows="4"></textarea></label>
+        <label>Admin notes<textarea id="class-notes" name="notes" rows="3"></textarea></label>
         <div class="actions left"><button class="button primary" type="submit">Save class</button></div>
         <p id="class-result" class="field-note"></p>
       </form>
@@ -84,89 +82,62 @@ const presetNames = Object.fromEntries(classTypePresets.map((type) => [type.id, 
 
   <script>
     const root = document.querySelector('#admin-root');
-    const presetNames = JSON.parse(root?.getAttribute('data-preset-names') || '{}');
+    const presetData = JSON.parse(root?.getAttribute('data-preset-data') || '{}');
     const classList = document.querySelector('#class-list');
     const selects = [document.querySelector('#student-class'), document.querySelector('#manual-class'), document.querySelector('#email-class')];
     let classes = [];
-
-    const esc = (value) => {
-      const text = String(value ?? '');
-      return text.replace(/[&<>"']/g, (character) => {
-        if (character === '&') return '&amp;';
-        if (character === '<') return '&lt;';
-        if (character === '>') return '&gt;';
-        if (character === '"') return '&quot;';
-        return '&#39;';
-      });
-    };
+    const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[character]);
 
     async function loadClasses() {
       const response = await fetch('/api/admin/classes');
-      if (response.status === 401) {
-        location.href = '/admin-login';
-        return;
-      }
-      const data = await response.json();
-      classes = data.classes || [];
-      classList.innerHTML = classes.length
-        ? classes.map((c) => `<div class="admin-row"><span><strong>${esc(c.title)}</strong><small>${esc(c.type_id)}</small></span><span>${esc(c.start_date)} – ${esc(c.end_date)}</span><span>${c.student_count || 0}${c.capacity ? ` / ${c.capacity}` : ''}</span><span class="status-pill">${new Date(c.end_date + 'T23:59:59') >= new Date() ? 'Upcoming' : 'Archived'}</span></div>`).join('')
-        : '<div class="admin-empty">No classes yet. Create the first one below.</div>';
-      selects.forEach((select) => {
-        if (!select) return;
-        select.innerHTML = '<option value="">Select a class</option>' + classes.filter((c) => new Date(c.end_date + 'T23:59:59') >= new Date()).map((c) => `<option value="${c.id}">${esc(c.title)} · ${esc(c.start_date)}</option>`).join('');
-      });
+      if (response.status === 401) return location.href = '/admin-login';
+      const data = await response.json(); classes = data.classes || [];
+      classList.innerHTML = classes.length ? classes.map((c) => `<div class="admin-row"><span><strong>${esc(c.title)}</strong><small>${esc(c.type_id)}</small></span><span>${esc(c.start_date)} – ${esc(c.end_date)}</span><span>${c.student_count || 0}${c.capacity ? ` / ${c.capacity}` : ''}</span><span class="status-pill">${new Date(c.end_date + 'T23:59:59') >= new Date() ? 'Upcoming' : 'Archived'}</span></div>`).join('') : '<div class="admin-empty">No classes yet. Create the first one below.</div>';
+      selects.forEach((select) => { if (select) select.innerHTML = '<option value="">Select a class</option>' + classes.filter((c) => new Date(c.end_date + 'T23:59:59') >= new Date()).map((c) => `<option value="${esc(c.id)}">${esc(c.title)} · ${esc(c.start_date)}</option>`).join(''); });
     }
 
     async function loadTemplates() {
-      const response = await fetch('/api/admin/templates');
-      if (response.status !== 200) return;
-      const data = await response.json();
-      document.querySelector('#email-template').innerHTML = '<option value="">Select a template</option>' + (data.templates || []).map((template) => `<option value="${template.id}">${esc(template.name)}</option>`).join('');
+      const response = await fetch('/api/admin/templates'); if (response.status !== 200) return;
+      const data = await response.json(); document.querySelector('#email-template').innerHTML = '<option value="">Select a template</option>' + (data.templates || []).map((template) => `<option value="${esc(template.id)}">${esc(template.name)}</option>`).join('');
     }
 
     document.querySelector('#class-type').addEventListener('change', (event) => {
-      document.querySelector('#class-name').value = presetNames[event.target.value] || '';
+      const preset = presetData[event.target.value];
+      document.querySelector('#class-name').value = preset?.name || '';
+      document.querySelector('#class-description').value = preset?.description || '';
+      document.querySelector('#class-notes').value = preset?.notes || '';
+      if (event.target.value === 'eight-week-in-person') document.querySelector('[name="schedule"]').value = 'Thursdays, 7:30 PM – 9:30 PM';
+    });
+    document.querySelector('#start-date').addEventListener('change', (event) => {
+      if (document.querySelector('#class-type').value !== 'eight-week-in-person') return;
+      const start = new Date(`${event.target.value}T12:00:00`); if (Number.isNaN(start.getTime())) return;
+      start.setDate(start.getDate() + 55); document.querySelector('#end-date').value = start.toISOString().slice(0,10);
     });
 
     document.querySelector('#class-form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const data = Object.fromEntries(new FormData(event.target));
-      const response = await fetch('/api/admin/classes', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
-      document.querySelector('#class-result').textContent = response.ok ? 'Class saved.' : 'Unable to save class.';
-      if (response.ok) { event.target.reset(); loadClasses(); }
+      event.preventDefault(); const result = document.querySelector('#class-result'); result.textContent = 'Saving…';
+      const response = await fetch('/api/admin/classes', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(Object.fromEntries(new FormData(event.target))) });
+      const data = await response.json(); result.textContent = response.ok ? 'Class saved.' : (data.error || 'Unable to save class.'); if (response.ok) { event.target.reset(); loadClasses(); }
     });
 
     document.querySelector('#student-class').addEventListener('change', async (event) => {
-      const target = document.querySelector('#student-list');
-      if (!event.target.value) { target.innerHTML = ''; return; }
-      const response = await fetch('/api/admin/students?classId=' + encodeURIComponent(event.target.value));
-      const data = await response.json();
+      const target = document.querySelector('#student-list'); if (!event.target.value) { target.innerHTML=''; return; }
+      const response = await fetch('/api/admin/students?classId=' + encodeURIComponent(event.target.value)); const data = await response.json();
       target.innerHTML = (data.students || []).map((student) => `<div class="admin-row"><span><strong>${esc(student.name)}</strong><small>${esc(student.email)}</small></span><span>${esc(student.phone || '')}</span><span>${esc(student.source)}</span><span>${esc(student.payment_status)}</span></div>`).join('') || '<div class="admin-empty">No registrations yet.</div>';
     });
 
     document.querySelector('#student-form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const data = Object.fromEntries(new FormData(event.target));
-      const response = await fetch('/api/admin/students', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
-      document.querySelector('#student-result').textContent = response.ok ? 'Student added and registration email sent.' : 'Unable to add student.';
-      if (response.ok) { event.target.reset(); loadClasses(); }
+      event.preventDefault(); const result = document.querySelector('#student-result'); result.textContent='Adding…';
+      const response = await fetch('/api/admin/students', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(Object.fromEntries(new FormData(event.target))) }); const data = await response.json();
+      result.textContent = response.ok ? `Student added. Verification code: ${data.verificationCode}` : (data.error || 'Unable to add student.'); if (response.ok) { event.target.reset(); loadClasses(); }
     });
 
     document.querySelector('#email-form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      if (!confirm('Send this email to everyone registered for this class?')) return;
-      const data = Object.fromEntries(new FormData(event.target));
-      const response = await fetch('/api/admin/send-email', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
-      const result = await response.json();
-      document.querySelector('#email-result').textContent = response.ok ? `Sent: ${result.sentCount}. Failed: ${result.failedCount}.` : (result.error || 'Unable to send.');
+      event.preventDefault(); if (!confirm('Send this email to everyone registered for this class?')) return; const resultEl=document.querySelector('#email-result'); resultEl.textContent='Sending…';
+      const response = await fetch('/api/admin/send-email', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(Object.fromEntries(new FormData(event.target))) }); const result=await response.json();
+      resultEl.textContent = response.ok ? `Sent: ${result.sentCount}. Failed: ${result.failedCount}.` : (result.error || 'Unable to send.');
     });
-
-    document.querySelector('#logout').addEventListener('click', async () => {
-      await fetch('/api/admin-login', { method: 'DELETE' });
-      location.href = '/admin-login';
-    });
-
-    loadClasses();
-    loadTemplates();
+    document.querySelector('#logout').addEventListener('click', async () => { await fetch('/api/admin-login', {method:'DELETE'}); location.href='/admin-login'; });
+    loadClasses(); loadTemplates();
   </script>
 </BaseLayout>
