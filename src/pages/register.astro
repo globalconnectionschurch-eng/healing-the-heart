@@ -2,126 +2,74 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 <BaseLayout title="Registration | Healing the Heart">
-  <section class="page-hero"><div class="page-hero-inner"><p class="eyebrow">Take your next step</p><h1>Registration</h1><p>You’re taking a powerful step toward healing, and we’re excited to walk this journey with you. Fill out the form below, and a facilitator will reach out with next steps.</p></div></section>
-  <section class="section">
-    <form id="registration-form" class="registration-form" method="post" action="/api/register">
-      <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true" />
-      <label>Name<input name="name" required autocomplete="name" /></label>
-      <label>Selected Your Course/Class<select id="class-select" name="classId" required><option value="">Loading current classes…</option></select></label>
-      <label>Email Address<input type="email" name="email" required autocomplete="email" placeholder="We’ll contact you here for class/course info." /></label>
-      <label>Phone<input type="tel" name="phone" autocomplete="tel" placeholder="Calls for urgent matters (class changes ETC)" /></label>
-      <label>Address<input name="address" autocomplete="street-address" placeholder="Address (for sending reports and course material)" /></label>
-      <label>Date of birth<input type="date" name="dateOfBirth" /></label>
-      <label>Marital status<select name="maritalStatus"><option value="">Select an option</option><option>Single</option><option>Married</option><option>Separated</option><option>Divorced</option><option>Widowed</option><option>Prefer not to say</option></select></label>
-      <label>What Church Do You Attend/Serve At?<input name="church" /></label>
-      <label>SR. Pastor Only<input name="srPastor" placeholder="Please Enter Your Clergy #" /></label>
-      <label>How did you hear about Favored Father/HTH?<input name="howHeard" placeholder="How did you hear about us" /></label>
-      <label>What do you hope to gain from this course?<textarea name="goals" placeholder="Sharing this helps us support you better."></textarea></label>
-      <label>Do you have any smoking or drinking concern? (Our facilities are smoke and alcohol free)<textarea name="smokingDrinking" placeholder="Sharing this helps us support you better."></textarea></label>
-      <label>Anything else you'd like to share to help up support your healing journey?<textarea name="anythingElse" placeholder="Share anything that helps us support you."></textarea></label>
-      <label>Verification Code <span class="field-note">(For those who were gifted this class or prepaid)</span><input name="verificationCode" placeholder="Please enter your Verification Code" /></label>
-      <p class="form-note">After submitting your form, we’ll email you instructions for completing your course payment. Your facilitator may also contact you if anything needs clarification.</p>
-      <button class="button primary" type="submit">Submit Registration</button>
-    </form>
-
-    <div id="registration-success" class="registration-result" hidden>
-      <p class="eyebrow">Registration received</p>
-      <h2>You’re registered for the next step.</h2>
-      <p id="success-message">Thank you. Your registration has been successfully submitted.</p>
-      <div id="payment-next-step" hidden>
-        <p><strong>Your registration is saved.</strong> When you're ready, proceed to the payment page to complete your registration.</p>
-        <a id="payment-link" class="button primary" href="#">Proceed to payment</a>
+  <section class="page-hero registration-hero"><div class="page-hero-inner"><p class="eyebrow">Take your next step</p><h1>Registration</h1><p>You don't have to fill everything out at once. We'll walk you through it, one simple step at a time.</p></div></section>
+  <section class="section registration-section">
+    <div class="registration-shell">
+      <div class="stepper" aria-label="Registration progress">
+        <div class="step active" data-step-indicator="1"><span>1</span><strong>Your class</strong></div>
+        <div class="step" data-step-indicator="2"><span>2</span><strong>About you</strong></div>
+        <div class="step" data-step-indicator="3"><span>3</span><strong>Your journey</strong></div>
+        <div class="step" data-step-indicator="4"><span>4</span><strong>Finish</strong></div>
       </div>
-      <p id="paid-next-step" hidden>Payment has already been recorded for this registration. Your class information will be sent by email.</p>
-    </div>
 
-    <div id="registration-error" class="registration-result error" hidden>
-      <p class="eyebrow">We need to try that again</p>
-      <h2>Your registration was not completed.</h2>
-      <p id="error-message">Please check your information and try again.</p>
-      <button id="try-again" class="button outline" type="button">Return to registration</button>
+      <form id="registration-form" class="registration-form" method="post" action="/api/register">
+        <input type="text" name="website" tabindex="-1" autocomplete="off" class="honeypot" aria-hidden="true" />
+
+        <fieldset class="form-step active" data-step="1">
+          <div class="step-intro"><p class="eyebrow">Step 1 of 4</p><h2>Choose your class</h2><p>Start with the class you're registering for. Everything else can come one step at a time.</p></div>
+          <label>Course / Class<select id="class-select" name="classId" required><option value="">Loading current classes…</option></select></label>
+        </fieldset>
+
+        <fieldset class="form-step" data-step="2">
+          <div class="step-intro"><p class="eyebrow">Step 2 of 4</p><h2>A little about you</h2><p>These details help us prepare for your class and stay in touch.</p></div>
+          <div class="field-grid">
+            <label>Name<input name="name" required autocomplete="name" /></label>
+            <label>Email Address<input type="email" name="email" required autocomplete="email" placeholder="We'll contact you here." /></label>
+            <label>Phone<input type="tel" name="phone" autocomplete="tel" placeholder="For important class updates." /></label>
+            <label>Date of birth<input type="date" name="dateOfBirth" /></label>
+            <label class="full">Address<input name="address" autocomplete="street-address" placeholder="For course materials and reports." /></label>
+            <label>Marital status<select name="maritalStatus"><option value="">Select an option</option><option>Single</option><option>Married</option><option>Separated</option><option>Divorced</option><option>Widowed</option><option>Prefer not to say</option></select></label>
+            <label>Church you attend / serve at<input name="church" /></label>
+            <label class="full">Senior pastor <span class="field-note">(clergy # if applicable)</span><input name="srPastor" placeholder="Clergy #" /></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-step" data-step="3">
+          <div class="step-intro"><p class="eyebrow">Step 3 of 4</p><h2>Your healing journey</h2><p>There are no perfect answers here. Share only what you're comfortable sharing.</p></div>
+          <label>How did you hear about Healing the Heart?<input name="howHeard" placeholder="How did you hear about us?" /></label>
+          <label>What do you hope to gain from this course?<textarea name="goals" placeholder="Sharing this helps us support you better."></textarea></label>
+          <label>Do you have any smoking or drinking concern?<span class="field-note">Our facilities are smoke and alcohol free.</span><textarea name="smokingDrinking" placeholder="Share anything we should know so we can support you well."></textarea></label>
+          <label>Anything else you'd like to share?<textarea name="anythingElse" placeholder="Anything that would help us support your healing journey."></textarea></label>
+        </fieldset>
+
+        <fieldset class="form-step" data-step="4">
+          <div class="step-intro"><p class="eyebrow">Step 4 of 4</p><h2>One last thing</h2><p>If you've been gifted the class or already prepaid, enter your verification code below. Otherwise, you can leave this blank.</p></div>
+          <label>Verification Code <span class="field-note">For gifted or prepaid registrations</span><input name="verificationCode" placeholder="Enter your verification code" /></label>
+          <div class="finish-note"><strong>Your information is confidential.</strong><p>After you submit, we'll email you the next steps. If payment is required, you'll be guided there after registration.</p></div>
+        </fieldset>
+
+        <div class="form-actions">
+          <button id="back-button" class="button outline" type="button" hidden>Back</button>
+          <button id="next-button" class="button primary" type="button">Continue</button>
+          <button id="submit-button" class="button primary" type="submit" hidden>Complete Registration</button>
+        </div>
+      </form>
+
+      <div id="registration-success" class="registration-result" hidden><p class="eyebrow">Registration received</p><h2>You're registered for the next step.</h2><p id="success-message">Thank you. Your registration has been successfully submitted.</p><div id="payment-next-step" hidden><p><strong>Your registration is saved.</strong> Proceed to payment to complete your registration.</p><a id="payment-link" class="button primary" href="#">Proceed to payment</a></div><p id="paid-next-step" hidden>Payment has already been recorded. Your class information will be sent by email.</p></div>
+      <div id="registration-error" class="registration-result error" hidden><p class="eyebrow">We need to try that again</p><h2>Your registration was not completed.</h2><p id="error-message">Please check your information and try again.</p><button id="try-again" class="button outline" type="button">Return to registration</button></div>
     </div>
   </section>
+
   <script is:inline>
-    const form = document.querySelector('#registration-form');
-    const select = document.querySelector('#class-select');
-    const success = document.querySelector('#registration-success');
-    const errorBox = document.querySelector('#registration-error');
-    const errorMessage = document.querySelector('#error-message');
-    const paymentNext = document.querySelector('#payment-next-step');
-    const paymentLink = document.querySelector('#payment-link');
-    const paidNext = document.querySelector('#paid-next-step');
-    const successMessage = document.querySelector('#success-message');
-
-    const loadClasses = async () => {
-      try {
-        const response = await fetch('/api/classes');
-        const data = await response.json();
-        select.innerHTML = '<option value="">Select a current class</option>';
-        for (const item of data.classes ?? []) {
-          const option = document.createElement('option');
-          option.value = item.id;
-          const price = Number(item.price_cents || 0) ? ` · $${(Number(item.price_cents) / 100).toFixed(2)}` : '';
-          option.textContent = `${item.title} · ${item.start_date} – ${item.end_date}${price}`;
-          select.appendChild(option);
-        }
-        if (!(data.classes ?? []).length) select.innerHTML = '<option value="">No classes are currently open</option>';
-        const requestedClass = new URLSearchParams(location.search).get('classId');
-        if (requestedClass && [...select.options].some((option) => option.value === requestedClass)) select.value = requestedClass;
-      } catch {
-        select.innerHTML = '<option value="">Classes are temporarily unavailable</option>';
-      }
-    };
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const button = form.querySelector('button[type="submit"]');
-      button.disabled = true;
-      button.textContent = 'Submitting…';
-      success.hidden = true;
-      errorBox.hidden = true;
-      try {
-        const response = await fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin' });
-        if (!response.ok) {
-          let message = 'We could not complete your registration. Please try again.';
-          try { const data = await response.json(); message = data.error || message; } catch {}
-          throw new Error(message);
-        }
-        const destination = response.url || '';
-        const paymentMatch = destination.match(/\/payment\?registration=([^&]+)/);
-        const successMatch = destination.includes('/register?success=1');
-        if (paymentMatch) {
-          paymentLink.href = `/payment?registration=${paymentMatch[1]}`;
-          paymentNext.hidden = false;
-          paidNext.hidden = true;
-          successMessage.textContent = 'Thank you. Your registration has been successfully submitted.';
-        } else if (successMatch) {
-          paymentNext.hidden = true;
-          paidNext.hidden = true;
-          successMessage.textContent = 'Thank you. Your registration has been successfully submitted.';
-        }
-        form.hidden = true;
-        success.hidden = false;
-        window.scrollTo({ top: success.offsetTop - 80, behavior: 'smooth' });
-      } catch (error) {
-        errorMessage.textContent = error instanceof Error ? error.message : 'We could not complete your registration. Please try again.';
-        errorBox.hidden = false;
-        button.disabled = false;
-        button.textContent = 'Submit Registration';
-        window.scrollTo({ top: errorBox.offsetTop - 80, behavior: 'smooth' });
-      }
-    });
-
-    document.querySelector('#try-again').addEventListener('click', () => {
-      errorBox.hidden = true;
-      form.hidden = false;
-      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-
-    loadClasses();
+    const form=document.querySelector('#registration-form');const select=document.querySelector('#class-select');const steps=[...document.querySelectorAll('.form-step')];const indicators=[...document.querySelectorAll('[data-step-indicator]')];const back=document.querySelector('#back-button');const next=document.querySelector('#next-button');const submit=document.querySelector('#submit-button');const success=document.querySelector('#registration-success');const errorBox=document.querySelector('#registration-error');const errorMessage=document.querySelector('#error-message');const paymentNext=document.querySelector('#payment-next-step');const paymentLink=document.querySelector('#payment-link');const paidNext=document.querySelector('#paid-next-step');let current=1;
+    const showStep=(n)=>{current=n;steps.forEach(s=>s.classList.toggle('active',Number(s.dataset.step)===n));indicators.forEach((s,i)=>{s.classList.toggle('active',i+1===n);s.classList.toggle('complete',i+1<n)});back.hidden=n===1;next.hidden=n===4;submit.hidden=n!==4;window.scrollTo({top:document.querySelector('.registration-section').offsetTop-70,behavior:'smooth'});};
+    const validateStep=()=>{const active=steps.find(s=>Number(s.dataset.step)===current);const fields=[...active.querySelectorAll('input,select,textarea')];for(const field of fields){if(!field.checkValidity()){field.reportValidity();return false}}return true};
+    next.addEventListener('click',()=>{if(validateStep())showStep(Math.min(4,current+1))});back.addEventListener('click',()=>showStep(Math.max(1,current-1)));
+    const loadClasses=async()=>{try{const response=await fetch('/api/classes');const data=await response.json();select.innerHTML='<option value="">Select a current class</option>';for(const item of data.classes??[]){const option=document.createElement('option');option.value=item.id;const price=Number(item.price_cents||0)?` · $${(Number(item.price_cents)/100).toFixed(2)}`:'';option.textContent=`${item.title} · ${item.start_date} – ${item.end_date}${price}`;select.appendChild(option)}if(!(data.classes??[]).length)select.innerHTML='<option value="">No classes are currently open</option>';const requested=new URLSearchParams(location.search).get('classId');if(requested&&[...select.options].some(o=>o.value===requested))select.value=requested}catch{select.innerHTML='<option value="">Classes are temporarily unavailable</option>'}};
+    form.addEventListener('submit',async e=>{e.preventDefault();if(!validateStep())return;submit.disabled=true;submit.textContent='Submitting…';success.hidden=true;errorBox.hidden=true;try{const response=await fetch(form.action,{method:'POST',body:new FormData(form),credentials:'same-origin'});if(!response.ok){let message='We could not complete your registration. Please try again.';try{const data=await response.json();message=data.error||message}catch{}throw new Error(message)}const destination=response.url||'';const paymentMatch=destination.match(/\/payment\?registration=([^&]+)/);paymentNext.hidden=!paymentMatch;paidNext.hidden=!!paymentMatch;if(paymentMatch)paymentLink.href=`/payment?registration=${paymentMatch[1]}`;form.hidden=true;success.hidden=false;window.scrollTo({top:success.offsetTop-80,behavior:'smooth'})}catch(err){errorMessage.textContent=err instanceof Error?err.message:'We could not complete your registration. Please try again.';errorBox.hidden=false;submit.disabled=false;submit.textContent='Complete Registration';window.scrollTo({top:errorBox.offsetTop-80,behavior:'smooth'})}});
+    document.querySelector('#try-again').addEventListener('click',()=>{errorBox.hidden=true;form.hidden=false;showStep(current)});loadClasses();
   </script>
   <style>
-    .registration-result{max-width:760px;margin:2rem auto 0;padding:2.5rem;border:1px solid var(--line,#ddd);border-radius:24px;background:var(--surface,#fff);box-shadow:0 16px 50px rgba(0,0,0,.06)}
-    .registration-result h2{margin:.25rem 0 1rem}.registration-result p{max-width:620px}.registration-result.error{border-color:#d9a0a0}.registration-result .button{margin-top:1rem}
+    .registration-hero .page-hero-inner{max-width:760px}.registration-section{padding-top:3rem}.registration-shell{max-width:850px;margin:0 auto}.honeypot{position:absolute;left:-9999px}.stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin:0 0 2.5rem}.step{display:flex;align-items:center;gap:.6rem;color:#888;font-size:.82rem;position:relative}.step span{width:30px;height:30px;border:1px solid #d6d1ca;border-radius:50%;display:grid;place-items:center;background:#fff}.step.active,.step.complete{color:inherit}.step.active span,.step.complete span{border-color:#555}.step:not(:last-child)::after{content:'';position:absolute;height:1px;background:#ddd;left:42px;right:-8px;top:15px;z-index:-1}.form-step{display:none;border:0;padding:0;margin:0}.form-step.active{display:block}.step-intro{margin-bottom:2rem;max-width:650px}.step-intro h2{font-size:clamp(2rem,4vw,3rem);margin:.25rem 0 .75rem}.step-intro p:last-child{color:#666;max-width:600px}.registration-form label{display:grid;gap:.45rem;margin-bottom:1.25rem;font-weight:600}.registration-form input,.registration-form select,.registration-form textarea{font:inherit;font-weight:400;width:100%;box-sizing:border-box;padding:.9rem 1rem;border:1px solid #d5d0c8;border-radius:12px;background:#fff}.registration-form textarea{min-height:130px;resize:vertical}.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 1.25rem}.field-grid .full{grid-column:1/-1}.field-note{font-size:.78rem;font-weight:400;color:#777;margin-left:.25rem}.form-actions{display:flex;justify-content:space-between;gap:1rem;margin-top:2rem;padding-top:1.5rem;border-top:1px solid #e5e0d8}.form-actions .button{min-width:150px}.form-actions #next-button,.form-actions #submit-button{margin-left:auto}.finish-note{margin-top:1.5rem;padding:1.2rem 1.4rem;background:#f5f2ed;border:1px solid #e7e0d7;border-radius:14px}.finish-note p{margin:.35rem 0 0;color:#666}.registration-result{max-width:760px;margin:2rem auto 0;padding:2.5rem;border:1px solid #ddd;border-radius:24px;background:#fff;box-shadow:0 16px 50px rgba(0,0,0,.06)}.registration-result h2{margin:.25rem 0 1rem}.registration-result.error{border-color:#d9a0a0}@media(max-width:700px){.stepper{gap:.25rem}.step strong{display:none}.step:not(:last-child)::after{left:34px}.field-grid{grid-template-columns:1fr}.field-grid .full{grid-column:auto}.registration-section{padding-top:2rem}.form-actions .button{min-width:120px}}
   </style>
 </BaseLayout>
