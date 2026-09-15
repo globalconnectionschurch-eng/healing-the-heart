@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { emailTemplates } from '../../data/email-templates';
+---
+<BaseLayout title="Email Templates | Healing the Heart Admin">
+  <section class="admin-shell">
+    <div class="admin-header"><div><p class="eyebrow">Admin</p><h1>Email templates</h1><p>Keep the messages used by the class system in one editable place. Changes will be stored with the template once the database connection is enabled.</p></div><a class="button outline" href="/admin">← Dashboard</a></div>
+    <div class="admin-grid">
+      {emailTemplates.map((template) => <article class="admin-card">
+        <div class="admin-card-head"><div><span class="status-pill">Saved template</span><h2>{template.name}</h2><p>{template.trigger}</p></div></div>
+        <label>Subject<input value={template.subject} /></label>
+        <label>Body<textarea rows="20">{template.body}</textarea></label>
+        <p class="field-note">Available merge fields include values such as <code>{'{{firstName}}'}</code>, <code>{'{{classTitle}}'}</code>, <code>{'{{startDate}}'}</code>, <code>{'{{registrationLink}}'}</code>, and <code>{'{{verificationCode}}'}</code>.</p>
+        <button class="button primary" type="button">Save template</button>
+      </article>)}
+      <article class="admin-card new-template">
+        <p class="eyebrow">Custom</p><h2>Create a new email template</h2>
+        <p>Admins will be able to create additional messages for future events, reminders, follow-ups, or other class communication.</p>
+        <label>Template name<input placeholder="e.g. Retreat packing reminder" /></label>
+        <label>Send trigger<input placeholder="e.g. 3 days before the retreat" /></label>
+        <label>Subject<input placeholder="Email subject" /></label>
+        <label>Body<textarea rows="12" placeholder="Write the email here. Merge fields can be inserted when connected."></textarea></label>
+        <button class="button primary" type="button">Create template</button>
+      </article>
+    </div>
+  </section>
+</BaseLayout>
