@@ -14,11 +14,11 @@
         <p class="admin-kicker">Healing the Heart</p>
         <h1>Admin sign in</h1>
         <p class="admin-muted">Manage classes, registrations, students, and class communication.</p>
-        <form class="admin-form" action="/admin-dashboard">
-          <label>Email<input type="email" name="email" autocomplete="email" required /></label>
-          <label>Password<input type="password" name="password" autocomplete="current-password" required /></label>
+        <form class="admin-form" action="/api/admin-login" method="post">
+          <label>Password<input type="password" name="password" autocomplete="current-password" required autofocus /></label>
           <button class="admin-button" type="submit">Sign in</button>
         </form>
+        <p class="admin-muted" style="font-size:.78rem">Admin access is protected by a server-side secret. No password is stored in the website code.</p>
         <a class="back-link" href="/">← Back to Healing the Heart</a>
       </section>
     </main>
