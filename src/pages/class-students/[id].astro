@@ -1,8 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+const classId = String(Astro.params.id ?? '');
 ---
 <BaseLayout title="Private Class Student List | Healing the Heart">
-  <main class="roster-page">
+  <main class="roster-page" data-class-id={classId}>
     <section class="roster-card" id="gate">
       <p class="eyebrow">Private class page</p>
       <h1>Class student list</h1>
@@ -22,12 +23,34 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   <style>
     .roster-page{max-width:1100px;margin:0 auto;padding:5rem 1.5rem 7rem}.roster-card{max-width:560px;margin:5rem auto;padding:2.5rem;border:1px solid var(--line,#ddd);border-radius:24px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.06)}.roster-card h1,.roster-header h1{margin:.25rem 0 1rem}.roster-card form{display:grid;gap:1rem;margin-top:2rem}.roster-card input{width:100%;box-sizing:border-box;margin-top:.4rem;padding:.85rem 1rem;border:1px solid #ccc;border-radius:10px}.error{color:#9b2c2c;min-height:1.3rem}.roster-header{display:flex;justify-content:space-between;gap:2rem;align-items:flex-end;margin-bottom:1.5rem}.privacy-note{padding:1rem 1.2rem;border-radius:12px;background:#f5f3ef;margin-bottom:2rem}.student-card{border:1px solid #ddd;border-radius:18px;padding:1.5rem;margin-bottom:1rem;background:#fff}.student-card h2{font-size:1.35rem;margin:0 0 .75rem}.student-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.student-field small{display:block;text-transform:uppercase;letter-spacing:.08em;font-size:.68rem;opacity:.6;margin-bottom:.2rem}.student-field{line-height:1.5}.student-wide{grid-column:1/-1}.empty{padding:2rem;border:1px dashed #ccc;border-radius:16px}.muted{opacity:.7}@media(max-width:700px){.roster-page{padding-top:3rem}.roster-card{margin:2rem auto;padding:1.5rem}.roster-header{align-items:flex-start;flex-direction:column}.student-grid{grid-template-columns:1fr}}
   </style>
-  <script define:vars={{ classId: String(Astro.params.id ?? '') }}>
-    const gate=document.querySelector('#gate'); const roster=document.querySelector('#roster'); const form=document.querySelector('#access-form'); const error=document.querySelector('#access-error'); const cards=document.querySelector('#student-cards');
-    const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  <script is:inline>
+    const page=document.querySelector('.roster-page');
+    const classId=page?.getAttribute('data-class-id')||'';
+    const gate=document.querySelector('#gate');
+    const roster=document.querySelector('#roster');
+    const form=document.querySelector('#access-form');
+    const error=document.querySelector('#access-error');
+    const cards=document.querySelector('#student-cards');
+    const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const fields=[['email','Email'],['phone','Phone'],['address','Address'],['date_of_birth','Date of birth'],['marital_status','Marital status'],['church','Church'],['sr_pastor','Senior pastor'],['how_heard','How they heard about HTH'],['goals','What they hope to gain'],['smoking_drinking','Smoking / drinking concern'],['anything_else','Additional information'],['payment_status','Payment status'],['registered_at','Registered']];
-    async function load(){const r=await fetch('/api/class-students/'+encodeURIComponent(classId));if(!r.ok){error.textContent='Your access has expired. Please enter the password again.';gate.hidden=false;roster.hidden=true;return;}const d=await r.json();document.querySelector('#class-title').textContent=d.class.title;document.querySelector('#class-meta').textContent=[d.class.startDate&&`${d.class.startDate} – ${d.class.endDate}`,d.class.schedule,d.class.locationName,d.class.locationAddress].filter(Boolean).join(' · ');cards.innerHTML=d.students.length?d.students.map(s=>`<article class="student-card"><h2>${esc(s.name)}</h2><div class="student-grid">${fields.map(([key,label])=>`<div class="student-field ${['goals','anything_else'].includes(key)?'student-wide':''}"><small>${label}</small><div>${esc(s[key]||'—')}</div></div>`).join('')}</div></article>`).join(''):'<div class="empty">No registered students yet.</div>';}
-    form.addEventListener('submit',async e=>{e.preventDefault();error.textContent='Checking…';const r=await fetch('/api/class-students/'+encodeURIComponent(classId)+'/access',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:document.querySelector('#password').value})});if(!r.ok){const d=await r.json();error.textContent=d.error||'Unable to verify password.';return;}gate.hidden=true;roster.hidden=false;await load();});
-    document.querySelector('#refresh').addEventListener('click',load);
+    async function load(){
+      const r=await fetch('/api/class-students/'+encodeURIComponent(classId));
+      if(!r.ok){gate.hidden=false;roster.hidden=true;error.textContent='Your access has expired. Please enter the password again.';return;}
+      const d=await r.json();
+      document.querySelector('#class-title').textContent=d.class?.title||'Class roster';
+      document.querySelector('#class-meta').textContent=[d.class?.startDate&&`${d.class.startDate} – ${d.class.endDate}`,d.class?.schedule,d.class?.locationName,d.class?.locationAddress].filter(Boolean).join(' · ');
+      cards.innerHTML=(d.students||[]).length?d.students.map(s=>`<article class="student-card"><h2>${esc(s.name)}</h2><div class="student-grid">${fields.map(([key,label])=>`<div class="student-field ${['goals','anything_else'].includes(key)?'student-wide':''}"><small>${label}</small><div>${esc(s[key]||'—')}</div></div>`).join('')}</div></article>`).join(''):'<div class="empty">No registered students yet.</div>';
+    }
+    form?.addEventListener('submit',async e=>{
+      e.preventDefault();
+      error.textContent='Checking…';
+      try{
+        const r=await fetch('/api/class-students/'+encodeURIComponent(classId)+'/access',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:document.querySelector('#password').value})});
+        const d=await r.json().catch(()=>({}));
+        if(!r.ok){error.textContent=d.error||'Unable to verify password.';return;}
+        error.textContent='';gate.hidden=true;roster.hidden=false;await load();
+      }catch{error.textContent='Unable to connect. Please try again.';}
+    });
+    document.querySelector('#refresh')?.addEventListener('click',load);
   </script>
 </BaseLayout>
