@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS classes (
   start_date TEXT NOT NULL,
   end_date TEXT NOT NULL,
   price_cents INTEGER NOT NULL DEFAULT 0,
+  payment_url TEXT,
   capacity INTEGER,
   schedule TEXT,
   location_name TEXT,
