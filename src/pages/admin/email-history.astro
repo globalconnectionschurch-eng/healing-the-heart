@@ -4,20 +4,12 @@ import { isAdminRequest } from '../../lib/server';
 if (!(await isAdminRequest(Astro.request))) return Astro.redirect('/admin-login');
 ---
 <BaseLayout title="Email History | Healing the Heart Admin">
-  <section class="admin-shell">
-    <div class="admin-header"><div><p class="eyebrow">Admin</p><h1>Email history</h1><p>A record of class emails sent and any delivery failures.</p></div><a class="button outline" href="/admin">← Dashboard</a></div>
-    <section class="admin-section">
-      <div class="admin-section-title"><div><p class="eyebrow">Communication log</p><h2>Recent emails</h2></div><select id="class-filter"><option value="">All classes</option></select></div>
-      <div id="email-list" class="email-log-list"><div class="admin-empty">Loading…</div></div>
-    </section>
-  </section>
-  <style>
-    .email-log-list{display:grid;gap:.7rem}.email-log{display:grid;grid-template-columns:1.4fr 1.5fr .8fr .9fr;gap:1rem;align-items:center;padding:1rem 1.1rem;border:1px solid rgba(0,0,0,.1);border-radius:14px;background:#fff}.email-log small,.email-log .muted{opacity:.65}.email-status{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.email-status.sent{color:#28633d}.email-status.failed{color:#9b2c2c}.email-error{grid-column:1/-1;font-size:.82rem;padding:.7rem;background:#fff5f5;border-radius:8px}@media(max-width:760px){.email-log{grid-template-columns:1fr 1fr}.email-log .email-recipient{grid-column:1/-1}.email-log .email-subject{grid-column:1/-1}}
-  </style>
-  <script is:inline>
-    const filter=document.querySelector('#class-filter');const list=document.querySelector('#email-list');const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-    async function loadClasses(){const r=await fetch('/api/admin/classes');if(r.status===401){location='/admin-login';return;}const d=await r.json();filter.innerHTML='<option value="">All classes</option>'+(d.classes||[]).map(c=>`<option value="${esc(c.id)}">${esc(c.title)}</option>`).join('');}
-    async function loadLogs(){list.innerHTML='<div class="admin-empty">Loading…</div>';const q=filter.value?'?classId='+encodeURIComponent(filter.value):'';const r=await fetch('/api/admin/email-logs'+q);if(r.status===401){location='/admin-login';return;}const d=await r.json();list.innerHTML=(d.logs||[]).map(log=>`<article class="email-log"><div><strong>${esc(log.student_name||'Unknown student')}</strong><br><small>${esc(log.class_title||'No class')}</small></div><div class="email-recipient">${esc(log.recipient_email)}</div><div class="email-subject"><strong>${esc(log.subject)}</strong></div><div><span class="email-status ${esc(log.status)}">${esc(log.status)}</span><br><small>${esc(new Date(log.sent_at).toLocaleString())}</small></div>${log.error?`<div class="email-error">${esc(log.error)}</div>`:''}</article>`).join('')||'<div class="admin-empty">No emails have been logged yet.</div>';}
-    filter.addEventListener('change',loadLogs);loadClasses().then(loadLogs);
-  </script>
+<section class="admin-shell"><div class="admin-header"><div><p class="eyebrow">Admin</p><h1>Email history</h1><p>A record of emails sent and delivery failures.</p></div><a class="button outline" href="/admin">← Dashboard</a></div>
+<section class="admin-section"><div class="admin-section-title"><div><p class="eyebrow">Communication log</p><h2>Recent emails</h2></div><select id="class-filter"><option value="">All classes</option></select></div><div id="email-list"><div class="admin-empty">Loading…</div></div></section></section>
+<script is:inline>
+const filter=document.querySelector('#class-filter'),list=document.querySelector('#email-list');const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function loadClasses(){const r=await fetch('/api/admin/classes');if(r.status===401)return location='/admin-login';const d=await r.json();filter.innerHTML='<option value="">All classes</option>'+(d.classes||[]).map(c=>`<option value="${esc(c.id)}">${esc(c.title)}</option>`).join('');}
+async function loadLogs(){const q=filter.value?'?classId='+encodeURIComponent(filter.value):'';const r=await fetch('/api/admin/email-history'+q);if(r.status===401)return location='/admin-login';const d=await r.json();list.innerHTML=(d.logs||[]).map(x=>`<article class="log"><div><strong>${esc(x.student_name||'Broadcast')}</strong><small>${esc(x.class_title||'')}</small></div><div>${esc(x.recipient_email)}</div><div><strong>${esc(x.subject)}</strong></div><div><b class="${esc(x.status)}">${esc(x.status)}</b><small>${x.sent_at?esc(new Date(x.sent_at).toLocaleString()):''}</small></div>${x.error?`<p>${esc(x.error)}</p>`:''}</article>`).join('')||'<div class="admin-empty">No emails have been logged yet.</div>';}
+filter.addEventListener('change',loadLogs);loadClasses().then(loadLogs);
+</script><style>#email-list{display:grid;gap:.7rem}.log{display:grid;grid-template-columns:1.2fr 1.4fr 1.5fr .8fr;gap:1rem;padding:1rem;border:1px solid rgba(0,0,0,.1);border-radius:14px;background:#fff}.log small{display:block;opacity:.6;margin-top:.2rem}.log .sent{color:#28633d}.log .failed{color:#9b2c2c}.log p{grid-column:1/-1;margin:0;padding:.6rem;background:#fff5f5;border-radius:8px}@media(max-width:760px){.log{grid-template-columns:1fr 1fr}.log>div:nth-child(2),.log>div:nth-child(3){grid-column:1/-1}}</style>
 </BaseLayout>
