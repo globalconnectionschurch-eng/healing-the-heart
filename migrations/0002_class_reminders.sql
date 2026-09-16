@@ -1,0 +1,2 @@
+ALTER TABLE classes ADD COLUMN auto_reminders_enabled INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE classes ADD COLUMN auto_reminder_time TEXT NOT NULL DEFAULT '12:00';
