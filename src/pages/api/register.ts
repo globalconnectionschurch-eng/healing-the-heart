@@ -6,15 +6,30 @@ import { fillTemplate, id, json, nowIso, sendEmail } from '../../lib/server';
 export const prerender = false;
 const text = (form: FormData, key: string) => String(form.get(key) ?? '').trim();
 
+async function ensureStudentProfileColumns() {
+  const existing = await env.DB.prepare('PRAGMA table_info(students)').all<any>();
+  const columns = new Set((existing.results ?? []).map((row: any) => row.name));
+  const additions: Record<string, string> = {
+    diagnosis: 'TEXT',
+    learning_restrictions: 'TEXT',
+    adopted: 'TEXT',
+    major_trauma: 'TEXT',
+    grief: 'TEXT',
+    in_ministry: 'TEXT',
+    dietary_restrictions: 'TEXT'
+  };
+  for (const [name, definition] of Object.entries(additions)) {
+    if (!columns.has(name)) await env.DB.prepare(`ALTER TABLE students ADD COLUMN ${name} ${definition}`).run();
+  }
+}
+
 async function sendEightWeekEmail(classRow: any, student: any, registrationId: string, now: string) {
   if (classRow.type_id !== 'eight-week-in-person') return;
   const saved = await env.DB.prepare('SELECT * FROM email_templates WHERE system_key=?').bind('eight-week-class-details').first<any>();
   const fallback = emailTemplates.find((item) => item.id === 'eight-week-class-details')!;
-  const subjectTemplate = saved?.subject ?? fallback.subject;
-  const bodyTemplate = saved?.body ?? fallback.body;
   const values = { firstName: student.name.split(/\s+/)[0], classTitle: classRow.title, locationName: classRow.location_name || '', locationAddress: classRow.location_address || '', schedule: classRow.schedule || '', dateRange: `${classRow.start_date} – ${classRow.end_date}`, parking: classRow.parking || '', whereToGo: classRow.where_to_go || '', contactEmail: env.CONTACT_EMAIL, siteUrl: env.SITE_URL, paymentInstructions: 'Your payment has been received.' };
-  const subject = fillTemplate(subjectTemplate, values);
-  const message = fillTemplate(bodyTemplate, values);
+  const subject = fillTemplate(saved?.subject ?? fallback.subject, values);
+  const message = fillTemplate(saved?.body ?? fallback.body, values);
   const sent = await sendEmail(student.email, subject, message);
   await env.DB.prepare(`INSERT INTO email_logs (id,template_id,class_id,student_id,recipient_email,subject,status,provider_message_id,error,sent_at) VALUES (?,?,?,?,?,?,?,?,?,?)`).bind(id('email'), saved?.id ?? fallback.id, classRow.id, student.id, student.email, subject, sent.sent ? 'sent' : 'failed', sent.messageId ?? null, sent.error ?? null, now).run();
 }
@@ -28,6 +43,7 @@ export const POST: APIRoute = async ({ request }) => {
   if (!name || !email || !classId) return json({ ok: false, error: 'Name, email, and class are required.' }, 400);
   if (!env.DB) return json({ ok: false, error: 'Registration is temporarily unavailable.' }, 503);
 
+  await ensureStudentProfileColumns();
   const classRow = await env.DB.prepare('SELECT * FROM classes WHERE id=? AND end_date>=date(\'now\')').bind(classId).first<any>();
   if (!classRow) return json({ ok: false, error: 'That class is no longer available.' }, 400);
 
@@ -41,13 +57,19 @@ export const POST: APIRoute = async ({ request }) => {
 
   const now = nowIso();
   const verificationCode = text(form, 'verificationCode') || existingRegistration?.verification_code || null;
+  const profile = [
+    text(form,'phone'), text(form,'address'), text(form,'dateOfBirth'), text(form,'maritalStatus'), text(form,'church'), text(form,'srPastor'),
+    text(form,'howHeard'), text(form,'goals'), text(form,'smokingDrinking'), text(form,'anythingElse'),
+    text(form,'diagnosis'), text(form,'learningRestrictions'), text(form,'adopted'), text(form,'majorTrauma'), text(form,'grief'), text(form,'inMinistry'), text(form,'dietaryRestrictions')
+  ];
+
   if (!existing) {
-    await env.DB.prepare(`INSERT INTO students (id,name,email,phone,address,date_of_birth,marital_status,church,sr_pastor,how_heard,goals,smoking_drinking,anything_else,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
-      actualStudentId,name,email,text(form,'phone'),text(form,'address'),text(form,'dateOfBirth'),text(form,'maritalStatus'),text(form,'church'),text(form,'srPastor'),text(form,'howHeard'),text(form,'goals'),text(form,'smokingDrinking'),text(form,'anythingElse'),now,now
+    await env.DB.prepare(`INSERT INTO students (id,name,email,phone,address,date_of_birth,marital_status,church,sr_pastor,how_heard,goals,smoking_drinking,anything_else,diagnosis,learning_restrictions,adopted,major_trauma,grief,in_ministry,dietary_restrictions,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
+      actualStudentId,name,email,...profile,now,now
     ).run();
   } else {
-    await env.DB.prepare(`UPDATE students SET name=?,phone=?,address=?,date_of_birth=?,marital_status=?,church=?,sr_pastor=?,how_heard=?,goals=?,smoking_drinking=?,anything_else=?,updated_at=? WHERE id=?`).bind(
-      name,text(form,'phone'),text(form,'address'),text(form,'dateOfBirth'),text(form,'maritalStatus'),text(form,'church'),text(form,'srPastor'),text(form,'howHeard'),text(form,'goals'),text(form,'smokingDrinking'),text(form,'anythingElse'),now,actualStudentId
+    await env.DB.prepare(`UPDATE students SET name=?,phone=?,address=?,date_of_birth=?,marital_status=?,church=?,sr_pastor=?,how_heard=?,goals=?,smoking_drinking=?,anything_else=?,diagnosis=?,learning_restrictions=?,adopted=?,major_trauma=?,grief=?,in_ministry=?,dietary_restrictions=?,updated_at=? WHERE id=?`).bind(
+      name,...profile,now,actualStudentId
     ).run();
   }
 
