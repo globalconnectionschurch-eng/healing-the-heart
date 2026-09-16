@@ -4,6 +4,7 @@ import { isAdminRequest, json, nowIso } from '../../../../lib/server';
 
 export const prerender = false;
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const PUBLIC_SITE_URL = 'https://healingtheheart.ca';
 
 function tokenValue(bytes: Uint8Array) {
   let binary = '';
@@ -44,5 +45,5 @@ export const POST: APIRoute = async ({ request }) => {
   await env.DB.prepare(`INSERT INTO profile_update_tokens (id,student_id,token_hash,expires_at,created_at) VALUES (?,?,?,?,?)`).bind(
     `profile_${crypto.randomUUID()}`, studentId, await hashToken(token), expiresAt, new Date(now).toISOString()
   ).run();
-  return json({ ok: true, name: student.name, url: `${env.SITE_URL}/profile-update/${token}`, expiresAt });
+  return json({ ok: true, name: student.name, url: `${PUBLIC_SITE_URL}/profile-update/${token}`, expiresAt });
 };
