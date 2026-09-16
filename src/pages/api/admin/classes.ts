@@ -36,7 +36,10 @@ const validate = (data: Record<string, any>) => {
 export const GET: APIRoute = async ({ request }) => {
   if (!(await isAdminRequest(request))) return json({ error: 'Unauthorized' }, 401);
   const { results } = await env.DB.prepare(`
-    SELECT c.*, (SELECT COUNT(*) FROM registrations r WHERE r.class_id = c.id AND r.status IN ('registered','pending_payment')) AS student_count
+    SELECT c.*,
+      (SELECT COUNT(*) FROM registrations r WHERE r.class_id = c.id AND r.status IN ('registered','pending_payment')) AS student_count,
+      (SELECT cs.start_time FROM class_sessions cs WHERE cs.class_id=c.id ORDER BY cs.session_number ASC LIMIT 1) AS start_time,
+      (SELECT cs.end_time FROM class_sessions cs WHERE cs.class_id=c.id ORDER BY cs.session_number ASC LIMIT 1) AS end_time
     FROM classes c ORDER BY c.end_date < date('now'), c.start_date ASC
   `).all();
   return json({ classes: results });
