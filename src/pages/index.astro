@@ -71,6 +71,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       linear-gradient(90deg, rgba(8, 14, 12, .52) 0%, rgba(8, 14, 12, .10) 48%, rgba(8, 14, 12, .38) 100%);
   }
 
+  .hero-home::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 190px;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(21, 28, 25, 0) 0%, rgba(21, 28, 25, .42) 42%, #151c19 100%);
+  }
+
   .hero-content {
     max-width: 980px;
     padding: 8rem 6vw;
@@ -88,6 +100,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .hero-overlay {
       background: linear-gradient(180deg, rgba(8,14,12,.48), rgba(8,14,12,.22) 38%, rgba(8,14,12,.72));
     }
+    .hero-home::after { height: 150px; }
     .hero-content { padding: 6rem 6vw; }
   }
 </style>
