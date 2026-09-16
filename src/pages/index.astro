@@ -68,7 +68,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     z-index: -1;
     background:
       linear-gradient(180deg, rgba(8, 14, 12, .42) 0%, rgba(8, 14, 12, .16) 42%, rgba(8, 14, 12, .62) 100%),
-      linear-gradient(90deg, rgba(8, 14, 12, .52) 0%, rgba(8, 14, 12, .10) 48%, rgba(8, 14, 12, .38) 100%);
+      linear-gradient(90deg, #151c19 0%, rgba(21, 28, 25, .72) 7%, rgba(8, 14, 12, .10) 20%, rgba(8, 14, 12, .10) 80%, rgba(21, 28, 25, .72) 93%, #151c19 100%);
   }
 
   .hero-home::after {
@@ -98,7 +98,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .hero-home { min-height: 78vh; }
     .hero-heart { object-position: center; }
     .hero-overlay {
-      background: linear-gradient(180deg, rgba(8,14,12,.48), rgba(8,14,12,.22) 38%, rgba(8,14,12,.72));
+      background:
+        linear-gradient(180deg, rgba(8,14,12,.48), rgba(8,14,12,.22) 38%, rgba(8,14,12,.72)),
+        linear-gradient(90deg, #151c19 0%, rgba(21,28,25,.58) 9%, rgba(8,14,12,.10) 22%, rgba(8,14,12,.10) 78%, rgba(21,28,25,.58) 91%, #151c19 100%);
     }
     .hero-home::after { height: 150px; }
     .hero-content { padding: 6rem 6vw; }
