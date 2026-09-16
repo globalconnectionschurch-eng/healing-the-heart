@@ -80,7 +80,7 @@ const presetData = Object.fromEntries(classTypePresets.map((item) => [item.id, i
 
   <script is:inline define:vars={{ presetData }}>
     const offerings = document.querySelectorAll('[data-type]');
-    const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+    const esc = (value) => String(value ?? '').replace(/[&<>\"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;', "'":'&#39;' })[c]);
     const money = (cents) => Number(cents || 0) === 0 ? 'Free' : `$${(Number(cents) / 100).toFixed(2)}`;
     const formatDate = (value) => {
       const date = new Date(`${value}T12:00:00Z`);
@@ -92,12 +92,21 @@ const presetData = Object.fromEntries(classTypePresets.map((item) => [item.id, i
         const response = await fetch('/api/classes');
         const data = await response.json();
         const classes = data.classes || [];
+        // The public page is an upcoming-classes listing. A class remains visible
+        // through its start date, then disappears from the public page the next day.
+        const today = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/Edmonton',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).format(new Date());
+        const upcomingClasses = classes.filter((item) => item.start_date >= today);
 
         offerings.forEach((card) => {
           const typeId = card.dataset.type;
           const preset = presetData[typeId];
           const dates = card.querySelector('[data-dates]');
-          const matches = classes.filter((item) => item.type_id === typeId);
+          const matches = upcomingClasses.filter((item) => item.type_id === typeId);
 
           if (typeId === 'one-on-one-intensive-weekend' && !matches.length) {
             dates.innerHTML = '<div class="date-placeholder">Dates and accommodations are arranged individually during a confidential consultation.</div><a class="button outline" href="/contact">Contact us about the intensive</a>';
