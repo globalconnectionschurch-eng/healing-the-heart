@@ -4,6 +4,8 @@
   "main": "@astrojs/cloudflare/entrypoints/server",
   "compatibility_date": "2026-09-15",
   "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": true,
   "assets": {
     "binding": "ASSETS",
     "directory": "./dist"
@@ -13,12 +15,6 @@
       "binding": "DB",
       "database_name": "healing-the-heart",
       "database_id": "a2069127-6d50-4cc1-9759-db630c38c29f"
-    }
-  ],
-  "routes": [
-    {
-      "pattern": "healingtheheart.ca",
-      "custom_domain": true
     }
   ],
   "vars": {
