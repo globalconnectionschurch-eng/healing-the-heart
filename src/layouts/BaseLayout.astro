@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 const { title = 'Healing the Heart', description = 'A Christ-centred journey toward healing, truth, restoration, and freedom.' } = Astro.props;
+const isHome = Astro.url.pathname === '/';
 ---
 <html lang="en">
   <head>
@@ -15,7 +16,7 @@ const { title = 'Healing the Heart', description = 'A Christ-centred journey tow
     <link rel="stylesheet" href="/admin-attendee-tools.css" />
   </head>
   <body>
-    <header class="site-header">
+    <header class:list={['site-header', { 'home-header': isHome }]}>
       <a class="brand" href="/" aria-label="Healing the Heart home"><span class="brand-heart">♥</span><span class="brand-name">HEALING <i>THE</i> HEART</span></a>
       <nav class="desktop-nav" aria-label="Main navigation"><a href="/journey">The Journey</a><a href="/what-we-help-with">What We Help With</a><a href="/what-to-expect">What to Expect</a><a href="/classes">Classes</a><a href="/about">Our Story</a><a href="/faq">FAQ</a><a href="/contact">Contact</a><a class="nav-cta" href="/register">Take the Next Step</a></nav>
       <details class="mobile-menu"><summary aria-label="Open menu">Menu</summary><div class="mobile-links"><a href="/journey">The Journey</a><a href="/what-we-help-with">What We Help With</a><a href="/classes">Classes</a><a href="/what-to-expect">What to Expect</a><a href="/about">Our Story</a><a href="/faq">FAQ</a><a href="/contact">Contact</a><a class="nav-cta" href="/register">Take the Next Step</a></div></details>
