@@ -23,6 +23,11 @@ body:not(.admin-page) .brand-name{color:#49372d}
 body:not(.admin-page) .brand-name i{color:#b36a3e}
 body:not(.admin-page) .desktop-nav{font-size:.86rem;gap:1.35rem}
 body:not(.admin-page) .desktop-nav a{color:#49372d}
+/* The homepage header sits directly over the heart image, so keep its menu light for contrast. */
+body:not(.admin-page) .home-header .desktop-nav a,
+body:not(.admin-page) .home-header .brand,
+body:not(.admin-page) .home-header .brand-name{color:#fff !important;text-shadow:0 2px 14px rgba(0,0,0,.6)}
+body:not(.admin-page) .home-header .desktop-nav a:hover{color:#ffd77e !important}
 body:not(.admin-page) .desktop-nav a:hover{color:#c65f2e}
 body:not(.admin-page) .nav-cta{background:linear-gradient(135deg,#d87935,#bd592c);box-shadow:0 7px 20px rgba(190,87,43,.18)}
 body:not(.admin-page) .page-hero{
