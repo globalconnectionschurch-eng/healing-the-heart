@@ -5,6 +5,7 @@ import { fillTemplate, id, json, nowIso, sendEmail } from '../../lib/server';
 
 export const prerender = false;
 const text = (form: FormData, key: string) => String(form.get(key) ?? '').trim();
+const crisisChoices = (form: FormData) => form.getAll('currentCrisis').map((value) => String(value).trim()).filter(Boolean).join(', ');
 
 async function ensureStudentProfileColumns() {
   const existing = await env.DB.prepare('PRAGMA table_info(students)').all<any>();
@@ -16,7 +17,9 @@ async function ensureStudentProfileColumns() {
     major_trauma: 'TEXT',
     grief: 'TEXT',
     in_ministry: 'TEXT',
-    dietary_restrictions: 'TEXT'
+    dietary_restrictions: 'TEXT',
+    current_crisis: 'TEXT',
+    self_harm_history: 'TEXT'
   };
   for (const [name, definition] of Object.entries(additions)) {
     if (!columns.has(name)) await env.DB.prepare(`ALTER TABLE students ADD COLUMN ${name} ${definition}`).run();
@@ -57,18 +60,20 @@ export const POST: APIRoute = async ({ request }) => {
 
   const now = nowIso();
   const verificationCode = text(form, 'verificationCode') || existingRegistration?.verification_code || null;
+  const currentCrisis = crisisChoices(form);
   const profile = [
     text(form,'phone'), text(form,'address'), text(form,'dateOfBirth'), text(form,'maritalStatus'), text(form,'church'), text(form,'srPastor'),
     text(form,'howHeard'), text(form,'goals'), text(form,'smokingDrinking'), text(form,'anythingElse'),
-    text(form,'diagnosis'), text(form,'learningRestrictions'), text(form,'adopted'), text(form,'majorTrauma'), text(form,'grief'), text(form,'inMinistry'), text(form,'dietaryRestrictions')
+    text(form,'diagnosis'), text(form,'learningRestrictions'), text(form,'adopted'), text(form,'majorTrauma'), text(form,'grief'), text(form,'inMinistry'), text(form,'dietaryRestrictions'),
+    currentCrisis, text(form,'selfHarmHistory')
   ];
 
   if (!existing) {
-    await env.DB.prepare(`INSERT INTO students (id,name,email,phone,address,date_of_birth,marital_status,church,sr_pastor,how_heard,goals,smoking_drinking,anything_else,diagnosis,learning_restrictions,adopted,major_trauma,grief,in_ministry,dietary_restrictions,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
+    await env.DB.prepare(`INSERT INTO students (id,name,email,phone,address,date_of_birth,marital_status,church,sr_pastor,how_heard,goals,smoking_drinking,anything_else,diagnosis,learning_restrictions,adopted,major_trauma,grief,in_ministry,dietary_restrictions,current_crisis,self_harm_history,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
       actualStudentId,name,email,...profile,now,now
     ).run();
   } else {
-    await env.DB.prepare(`UPDATE students SET name=?,phone=?,address=?,date_of_birth=?,marital_status=?,church=?,sr_pastor=?,how_heard=?,goals=?,smoking_drinking=?,anything_else=?,diagnosis=?,learning_restrictions=?,adopted=?,major_trauma=?,grief=?,in_ministry=?,dietary_restrictions=?,updated_at=? WHERE id=?`).bind(
+    await env.DB.prepare(`UPDATE students SET name=?,phone=?,address=?,date_of_birth=?,marital_status=?,church=?,sr_pastor=?,how_heard=?,goals=?,smoking_drinking=?,anything_else=?,diagnosis=?,learning_restrictions=?,adopted=?,major_trauma=?,grief=?,in_ministry=?,dietary_restrictions=?,current_crisis=?,self_harm_history=?,updated_at=? WHERE id=?`).bind(
       name,...profile,now,actualStudentId
     ).run();
   }
