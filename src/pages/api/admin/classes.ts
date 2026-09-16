@@ -7,6 +7,11 @@ export const prerender = false;
 
 const validTime = (value: unknown, fallback = '12:00') => String(value ?? '').match(/^([01]\d|2[0-3]):[0-5]\d$/)?.[0] ?? fallback;
 
+const tableColumns = async (table: string) => {
+  const { results } = await env.DB.prepare(`PRAGMA table_info(${table})`).all();
+  return new Set((results as Array<{ name?: string }>).map((row) => String(row.name ?? '')));
+};
+
 const saveSessions = async (classId: string, typeId: string, startDate: string, endDate: string, startTime: string | null, endTime: string | null) => {
   await env.DB.prepare('DELETE FROM class_sessions WHERE class_id=?').bind(classId).run();
   if (typeId !== 'eight-week-in-person') return;
@@ -55,6 +60,8 @@ export const POST: APIRoute = async ({ request }) => {
     if (!classId || password.length < 6) return json({ error: 'Choose a class and use a password of at least 6 characters.' }, 400);
     const classRow = await env.DB.prepare('SELECT id FROM classes WHERE id=?').bind(classId).first();
     if (!classRow) return json({ error: 'Class not found.' }, 404);
+    const columns = await tableColumns('classes');
+    if (!columns.has('student_link_password_hash')) return json({ error: 'The database is missing the student-link password field. Run the latest database migrations.' }, 500);
     const passwordHash = await hashClassPassword(password);
     await env.DB.prepare('UPDATE classes SET student_link_password_hash=?,updated_at=? WHERE id=?').bind(passwordHash, nowIso(), classId).run();
     return json({ ok: true });
@@ -67,26 +74,40 @@ export const POST: APIRoute = async ({ request }) => {
   const autoReminders = isEightWeek && data.autoReminders === true;
   const reminderTime = validTime(data.autoReminderTime);
   const now = nowIso();
+  const columns = await tableColumns('classes');
+  const reminderFieldsAvailable = columns.has('auto_reminders_enabled') && columns.has('auto_reminder_time');
 
   if (data.action === 'update') {
     const classId = String(data.classId ?? '').trim();
     if (!classId) return json({ error: 'Class not found.' }, 404);
     const existing = await env.DB.prepare('SELECT id FROM classes WHERE id=?').bind(classId).first();
     if (!existing) return json({ error: 'Class not found.' }, 404);
-    await env.DB.prepare(`UPDATE classes SET type_id=?,title=?,description=?,start_date=?,end_date=?,price_cents=?,capacity=?,schedule=?,location_name=?,location_address=?,parking=?,where_to_go=?,what_to_bring=?,notes=?,payment_url=?,auto_reminders_enabled=?,auto_reminder_time=?,updated_at=? WHERE id=?`).bind(
-      data.typeId, data.title, data.description ?? '', startDate, endDate, priceCents, data.capacity ? Number(data.capacity) : null,
-      data.schedule ?? '', data.locationName ?? '', data.locationAddress ?? '', data.parking ?? '', data.whereToGo ?? '', data.whatToBring ?? '', data.notes ?? '', data.paymentUrl ?? '', autoReminders ? 1 : 0, reminderTime, now, classId
-    ).run();
+    const setParts = ['type_id=?','title=?','description=?','start_date=?','end_date=?','price_cents=?','capacity=?','schedule=?','location_name=?','location_address=?','parking=?','where_to_go=?','what_to_bring=?','notes=?','payment_url=?'];
+    const values: any[] = [data.typeId, data.title, data.description ?? '', startDate, endDate, priceCents, data.capacity ? Number(data.capacity) : null,
+      data.schedule ?? '', data.locationName ?? '', data.locationAddress ?? '', data.parking ?? '', data.whereToGo ?? '', data.whatToBring ?? '', data.notes ?? '', data.paymentUrl ?? ''];
+    if (reminderFieldsAvailable) {
+      setParts.push('auto_reminders_enabled=?','auto_reminder_time=?');
+      values.push(autoReminders ? 1 : 0, reminderTime);
+    }
+    setParts.push('updated_at=?');
+    values.push(now, classId);
+    await env.DB.prepare(`UPDATE classes SET ${setParts.join(',')} WHERE id=?`).bind(...values).run();
     await saveSessions(classId, String(data.typeId), startDate, endDate, data.startTime ?? null, data.endTime ?? null);
     return json({ ok: true, id: classId });
   }
 
   const classId = id('class');
-  await env.DB.prepare(`INSERT INTO classes (id,type_id,title,description,start_date,end_date,price_cents,capacity,schedule,location_name,location_address,parking,where_to_go,what_to_bring,notes,payment_url,auto_reminders_enabled,auto_reminder_time,created_at,updated_at)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
-    classId, data.typeId, data.title, data.description ?? '', startDate, endDate, priceCents, data.capacity ? Number(data.capacity) : null,
-    data.schedule ?? '', data.locationName ?? '', data.locationAddress ?? '', data.parking ?? '', data.whereToGo ?? '', data.whatToBring ?? '', data.notes ?? '', data.paymentUrl ?? '', autoReminders ? 1 : 0, reminderTime, now, now
-  ).run();
+  const insertFields = ['id','type_id','title','description','start_date','end_date','price_cents','capacity','schedule','location_name','location_address','parking','where_to_go','what_to_bring','notes','payment_url'];
+  const insertValues: any[] = [classId, data.typeId, data.title, data.description ?? '', startDate, endDate, priceCents, data.capacity ? Number(data.capacity) : null,
+    data.schedule ?? '', data.locationName ?? '', data.locationAddress ?? '', data.parking ?? '', data.whereToGo ?? '', data.whatToBring ?? '', data.notes ?? '', data.paymentUrl ?? ''];
+  if (reminderFieldsAvailable) {
+    insertFields.push('auto_reminders_enabled','auto_reminder_time');
+    insertValues.push(autoReminders ? 1 : 0, reminderTime);
+  }
+  insertFields.push('created_at','updated_at');
+  insertValues.push(now, now);
+  const placeholders = insertFields.map(() => '?').join(',');
+  await env.DB.prepare(`INSERT INTO classes (${insertFields.join(',')}) VALUES (${placeholders})`).bind(...insertValues).run();
   await saveSessions(classId, String(data.typeId), startDate, endDate, data.startTime ?? null, data.endTime ?? null);
   return json({ ok: true, id: classId }, 201);
 };
