@@ -153,12 +153,13 @@ const presetData = Object.fromEntries(classTypePresets.map((item) => [item.id, i
     .class-option > div { min-width: 0; display: grid; gap: .25rem; }
     .class-option strong { font-size: 1rem; }
     .class-option span { color: rgba(30,25,20,.62); font-size: .86rem; line-height: 1.45; }
+    .class-option .button { flex: 0 0 auto; margin-left: .5rem; }
     .process-section h2 { max-width: 920px; }
     .process-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: .75rem; margin-top: 2rem; }
     .process-steps div { padding: 1rem; border: 1px solid rgba(40,30,20,.09); border-radius: 16px; background: #fff; display: grid; gap: .5rem; }
     .process-steps strong { font-size: .72rem; color: #8a7057; }
     .process-steps span { font-weight: 700; line-height: 1.3; }
     @media (max-width: 800px) { .process-steps { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 600px) { .offering-card { padding: 1.15rem; border-radius: 19px; } .class-option { align-items: flex-start; flex-direction: column; } .class-option .button { width: 100%; } .date-placeholder { align-items: flex-start; flex-direction: column; } .process-steps { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .offering-card { padding: 1.15rem; border-radius: 19px; } .class-option { align-items: flex-start; flex-direction: column; } .class-option .button { width: 100%; margin-left: 0; } .date-placeholder { align-items: flex-start; flex-direction: column; } .process-steps { grid-template-columns: 1fr; } }
   </style>
 </BaseLayout>
