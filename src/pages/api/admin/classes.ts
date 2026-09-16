@@ -5,6 +5,34 @@ import { hashClassPassword, isAdminRequest, id, json, nowIso } from '../../../li
 
 export const prerender = false;
 
+const validTime = (value: unknown, fallback = '12:00') => String(value ?? '').match(/^([01]\d|2[0-3]):[0-5]\d$/)?.[0] ?? fallback;
+
+const saveSessions = async (classId: string, typeId: string, startDate: string, endDate: string, startTime: string | null, endTime: string | null) => {
+  await env.DB.prepare('DELETE FROM class_sessions WHERE class_id=?').bind(classId).run();
+  if (typeId !== 'eight-week-in-person') return;
+  const start = new Date(`${startDate}T12:00:00Z`);
+  const end = new Date(`${endDate}T12:00:00Z`);
+  let number = 1;
+  for (let cursor = new Date(start); cursor <= end && number <= 8; cursor.setUTCDate(cursor.getUTCDate() + 7), number++) {
+    await env.DB.prepare(`INSERT INTO class_sessions (id,class_id,session_number,session_date,start_time,end_time) VALUES (?,?,?,?,?,?)`).bind(
+      id('session'), classId, number, cursor.toISOString().slice(0, 10), startTime, endTime
+    ).run();
+  }
+};
+
+const validate = (data: Record<string, any>) => {
+  const required = ['typeId', 'title', 'startDate', 'endDate'];
+  if (required.some((key) => !String(data[key] ?? '').trim())) return { error: 'Type, title, start date, and end date are required.' };
+  const startDate = String(data.startDate).slice(0, 10);
+  const endDate = String(data.endDate).slice(0, 10);
+  if (endDate < startDate) return { error: 'End date cannot be before the start date.' };
+  const preset = classTypePresets.find((item) => item.id === String(data.typeId));
+  const rawPrice = String(data.price ?? '').trim();
+  const priceCents = rawPrice ? Math.round(Number(rawPrice) * 100) : (preset?.defaultPriceCents ?? 0);
+  if (!Number.isFinite(priceCents) || priceCents < 0) return { error: 'Enter a valid price.' };
+  return { startDate, endDate, priceCents };
+};
+
 export const GET: APIRoute = async ({ request }) => {
   if (!(await isAdminRequest(request))) return json({ error: 'Unauthorized' }, 401);
   const { results } = await env.DB.prepare(`
@@ -29,36 +57,33 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ ok: true });
   }
 
-  const required = ['typeId','title','startDate','endDate'];
-  if (required.some((key) => !String(data[key] ?? '').trim())) return json({ error: 'Type, title, start date, and end date are required.' }, 400);
-  const startDate = String(data.startDate).slice(0, 10);
-  const endDate = String(data.endDate).slice(0, 10);
-  if (endDate < startDate) return json({ error: 'End date cannot be before the start date.' }, 400);
+  const checked = validate(data);
+  if (checked.error) return json(checked, 400);
+  const { startDate, endDate, priceCents } = checked;
+  const isEightWeek = data.typeId === 'eight-week-in-person';
+  const autoReminders = isEightWeek && data.autoReminders === true;
+  const reminderTime = validTime(data.autoReminderTime);
+  const now = nowIso();
 
-  const preset = classTypePresets.find((item) => item.id === String(data.typeId));
-  const rawPrice = String(data.price ?? '').trim();
-  const priceCents = rawPrice ? Math.round(Number(rawPrice) * 100) : (preset?.defaultPriceCents ?? 0);
-  if (!Number.isFinite(priceCents) || priceCents < 0) return json({ error: 'Enter a valid price.' }, 400);
+  if (data.action === 'update') {
+    const classId = String(data.classId ?? '').trim();
+    if (!classId) return json({ error: 'Class not found.' }, 404);
+    const existing = await env.DB.prepare('SELECT id FROM classes WHERE id=?').bind(classId).first();
+    if (!existing) return json({ error: 'Class not found.' }, 404);
+    await env.DB.prepare(`UPDATE classes SET type_id=?,title=?,description=?,start_date=?,end_date=?,price_cents=?,capacity=?,schedule=?,location_name=?,location_address=?,parking=?,where_to_go=?,what_to_bring=?,notes=?,payment_url=?,auto_reminders_enabled=?,auto_reminder_time=?,updated_at=? WHERE id=?`).bind(
+      data.typeId, data.title, data.description ?? '', startDate, endDate, priceCents, data.capacity ? Number(data.capacity) : null,
+      data.schedule ?? '', data.locationName ?? '', data.locationAddress ?? '', data.parking ?? '', data.whereToGo ?? '', data.whatToBring ?? '', data.notes ?? '', data.paymentUrl ?? '', autoReminders ? 1 : 0, reminderTime, now, classId
+    ).run();
+    await saveSessions(classId, String(data.typeId), startDate, endDate, data.startTime ?? null, data.endTime ?? null);
+    return json({ ok: true, id: classId });
+  }
 
   const classId = id('class');
-  const now = nowIso();
-  const isEightWeek = data.typeId === 'eight-week-in-person';
-  const autoReminders = isEightWeek && data.autoReminders !== false;
-  const reminderTime = String(data.autoReminderTime ?? '12:00').match(/^([01]\d|2[0-3]):[0-5]\d$/)?.[0] ?? '12:00';
-
   await env.DB.prepare(`INSERT INTO classes (id,type_id,title,description,start_date,end_date,price_cents,capacity,schedule,location_name,location_address,parking,where_to_go,what_to_bring,notes,payment_url,auto_reminders_enabled,auto_reminder_time,created_at,updated_at)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
     classId, data.typeId, data.title, data.description ?? '', startDate, endDate, priceCents, data.capacity ? Number(data.capacity) : null,
     data.schedule ?? '', data.locationName ?? '', data.locationAddress ?? '', data.parking ?? '', data.whereToGo ?? '', data.whatToBring ?? '', data.notes ?? '', data.paymentUrl ?? '', autoReminders ? 1 : 0, reminderTime, now, now
   ).run();
-
-  if (isEightWeek) {
-    const start = new Date(`${startDate}T12:00:00Z`);
-    const end = new Date(`${endDate}T12:00:00Z`);
-    let number = 1;
-    for (let cursor = new Date(start); cursor <= end && number <= 8; cursor.setUTCDate(cursor.getUTCDate() + 7), number++) {
-      await env.DB.prepare(`INSERT INTO class_sessions (id,class_id,session_number,session_date,start_time,end_time) VALUES (?,?,?,?,?,?)`).bind(id('session'), classId, number, cursor.toISOString().slice(0,10), data.startTime ?? null, data.endTime ?? null).run();
-    }
-  }
+  await saveSessions(classId, String(data.typeId), startDate, endDate, data.startTime ?? null, data.endTime ?? null);
   return json({ ok: true, id: classId }, 201);
 };
