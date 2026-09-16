@@ -81,6 +81,30 @@ export async function verifyClassPassword(password: string, stored: string) {
   }
 }
 
+export async function hashAdminPassword(password: string) {
+  return hashClassPassword(password);
+}
+
+export async function verifyAdminPassword(password: string, stored: string) {
+  return verifyClassPassword(password, stored);
+}
+
+export async function getAdminPasswordHash() {
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS admin_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)`).run();
+  const row = await env.DB.prepare(`SELECT value FROM admin_settings WHERE key='password_hash'`).first<{ value: string }>();
+  return row?.value ?? null;
+}
+
+export async function setAdminPasswordHash(passwordHash: string) {
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS admin_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)`).run();
+  await env.DB.prepare(`INSERT INTO admin_settings (key,value) VALUES ('password_hash',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value`).bind(passwordHash).run();
+}
+
+export async function getConfiguredAdminPassword() {
+  const overrideHash = await getAdminPasswordHash();
+  return { overrideHash, envPassword: env.ADMIN_PASSWORD };
+}
+
 export async function createClassAccessCookie(classId: string, passwordHash: string) {
   const secret = env.ADMIN_SESSION_SECRET;
   if (!secret) throw new Error('ADMIN_SESSION_SECRET is not configured.');
@@ -118,7 +142,7 @@ export function id(prefix: string) {
 }
 
 export function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char);
+  return value.replace(/[&<>\"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;' })[char] ?? char);
 }
 
 export function renderEmailHtml(text: string) {
