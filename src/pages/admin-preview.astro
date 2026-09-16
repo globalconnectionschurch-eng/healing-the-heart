@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const mockClasses = [
+  { title: '8-Week Healing the Heart', type: '8-week in person', start: '2026-10-01', end: '2026-11-19', count: 12, capacity: 20 },
+  { title: '3-Day Healing Retreat', type: '3 day retreat', start: '2026-10-23', end: '2026-10-25', count: 8, capacity: 18 },
+];
+---
+<BaseLayout title="Admin UI Preview | Healing the Heart">
+  <section class="admin-shell" id="admin-root">
+    <div class="admin-header"><div><p class="eyebrow">Healing the Heart</p><h1>Admin dashboard preview</h1><p>This is a safe visual preview using sample data only.</p></div><div class="actions"><a class="button outline" href="/">View website</a></div></div>
+    <nav class="admin-menu" aria-label="Admin menu">
+      <a href="#dashboard">Dashboard</a><a href="#registrations">Classes</a><a href="#student-management">Registrations</a><a href="#attendees">Attendee Directory</a><a href="#blast">Blast Email</a><a href="#templates">Email Templates</a><a href="#history">Email History</a>
+    </nav>
+    <div class="admin-actions">
+      <a class="admin-action" href="#registrations"><span>＋</span><div><strong>Create a class</strong><small>Choose a class type and auto-fill its starting details.</small></div></a>
+      <a class="admin-action" href="#student-management"><span>◉</span><div><strong>Registrations</strong><small>See students registered for each class.</small></div></a>
+      <a class="admin-action" href="#attendees"><span>◎</span><div><strong>Attendee Directory</strong><small>Every person who has ever registered, with editable profiles.</small></div></a>
+      <a class="admin-action" href="#blast"><span>✉</span><div><strong>Blast Email</strong><small>Message everyone who has opted into mass email.</small></div></a>
+    </div>
+    <section class="admin-section" id="registrations"><div class="admin-section-title"><div><p class="eyebrow">Classes</p><h2>Upcoming classes</h2></div><span class="status-pill">Past end dates are automatically archived</span></div><div id="upcoming-class-list" class="admin-table">{mockClasses.map(c => <div class="admin-row"><span><strong>{c.title}</strong><small>{c.type}</small></span><span>{c.start} – {c.end}</span><span>{c.count} / {c.capacity}</span><span class="status-pill">Upcoming</span></div>)}</div></section>
+    <section class="admin-section" id="student-management"><div class="admin-section-title"><div><p class="eyebrow">Students</p><h2>Registrations</h2><p>Sample data shown only for visual inspection.</p></div></div><label>Class<select id="student-class"><option>Select a class</option><option>8-Week Healing the Heart · 2026-10-01</option><option>3-Day Healing Retreat · 2026-10-23</option></select></label><div id="student-list" class="admin-table" style="margin-top:1rem"><div class="registration-card"><div style="padding:1rem 1.2rem"><strong>Sample Student</strong><div class="field-note">sample@example.com</div></div></div></div><h3 style="margin-top:2rem">Manually add a student</h3><form id="student-form" class="admin-form"><div class="form-grid"><label>Name<input name="name" /></label><label>Email<input name="email" type="email" /></label></div><label>Class<select name="classId" id="manual-class"><option value="sample">8-Week Healing the Heart · 2026-10-01</option><option value="sample2">3-Day Healing Retreat · 2026-10-23</option></select></label><label>Email action<select><option>Add student + send registration email</option><option>Add student + send customer email</option><option>Add student with no other action</option></select></label><button class="button primary" type="button">Add student</button></form></section>
+    <section class="admin-section"><div class="admin-section-title"><div><p class="eyebrow">Security</p><h2>Admin password protection</h2><p>The live setting is managed from the authenticated admin area. This preview does not expose or change security settings.</p></div><span class="status-pill">Protected</span></div></section>
+  </section>
+</BaseLayout>
