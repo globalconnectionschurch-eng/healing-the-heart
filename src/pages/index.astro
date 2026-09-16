@@ -57,7 +57,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   }
 
   .home-header .brand,
-  .home-header .desktop-nav a { color: #fff; }
+  .home-header .brand-name,
+  .home-header .desktop-nav a { color: #fff !important; }
 
   .home-header .brand-heart {
     background: transparent;
@@ -68,7 +69,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   }
 
   .home-header .brand-name { letter-spacing: .18em; }
-  .home-header .brand-name i { color: #ffd270; opacity: .9; }
+  .home-header .brand-name i { color: #fff; opacity: 1; }
   .home-header .nav-cta { background: #f4bd52; color: #1d211d !important; padding: .75rem 1.25rem; box-shadow: 0 8px 25px rgba(0,0,0,.16); }
 
   .hero-home {
@@ -124,11 +125,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     font-size:clamp(4.2rem,8vw,7.8rem);
     line-height:.88;
     letter-spacing:-.055em;
+    color:#fff;
   }
 
-  .hero-content h1 em { color:#ffd06b; font-style:italic; font-weight:400; }
+  .hero-content h1 em { color:#fff; font-style:italic; font-weight:400; }
   .hero-copy { max-width:500px; margin:0 0 2rem; font-size:clamp(1.08rem,1.8vw,1.3rem); color:rgba(255,255,255,.94); }
-  .hero-content .eyebrow { margin-bottom:1.15rem; color:#ffd270; letter-spacing:.22em; }
+  .hero-content .eyebrow { margin-bottom:1.15rem; color:#fff; letter-spacing:.22em; }
   .hero-content .actions { gap:1rem; }
   .hero-content .button.primary { background:#f3bd50; color:#1c211d; box-shadow:0 10px 30px rgba(0,0,0,.2); }
   .hero-content .button.primary span { margin-left:.35rem; font-size:1.05em; }
