@@ -5,7 +5,12 @@ import { fillTemplate, id, json, nowIso, sendEmail } from '../../lib/server';
 
 export const prerender = false;
 const text = (form: FormData, key: string) => String(form.get(key) ?? '').trim();
-const crisisChoices = (form: FormData) => form.getAll('currentCrisis').map((value) => String(value).trim()).filter(Boolean).join(', ');
+const crisisChoices = (form: FormData) => {
+  const choices = form.getAll('currentCrisis').map((value) => String(value).trim()).filter(Boolean);
+  const other = text(form, 'currentCrisisOther');
+  if (other) choices.push(`Other: ${other}`);
+  return choices.join(', ');
+};
 
 async function ensureStudentProfileColumns() {
   const existing = await env.DB.prepare('PRAGMA table_info(students)').all<any>();
