@@ -15,6 +15,12 @@
       "database_id": "a2069127-6d50-4cc1-9759-db630c38c29f"
     }
   ],
+  "routes": [
+    {
+      "pattern": "healingtheheart.ca",
+      "custom_domain": true
+    }
+  ],
   "vars": {
     "SITE_URL": "https://healingtheheart.ca",
     "FROM_EMAIL": "Healing the Heart <healingtheheart.ca@gmail.com>",
