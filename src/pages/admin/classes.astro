@@ -24,7 +24,7 @@ const presetData = Object.fromEntries(classTypePresets.map((type) => [type.id, t
     <div id="class-modal" class="modal-backdrop" hidden>
       <div class="class-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-head"><div><p id="modal-eyebrow" class="eyebrow">New class</p><h2 id="modal-title">Create a class</h2><p id="modal-description">Choose a class type to pre-fill its standard details.</p></div><button id="close-modal" class="icon-button" type="button" aria-label="Close">×</button></div>
-        <form id="class-form" class="admin-form">
+        <form id="class-form" class="admin-form" novalidate>
           <input id="classId" type="hidden">
           <label>Class type<select id="typeId" required><option value="">Choose a class type</option>{classTypePresets.map(t=><option value={t.id}>{t.name}</option>)}</select></label>
           <div class="form-grid"><label>Class name<input id="title" required></label><label>Price<input id="price" type="number" min="0" step="0.01"></label><label>Start date<input id="startDate" type="date" required></label><label>End date<input id="endDate" type="date" required></label><label>Start time<input id="startTime" type="time"></label><label>End time<input id="endTime" type="time"></label><label>Schedule<input id="schedule" placeholder="e.g. Thursdays, 7:30 PM – 9:30 PM"></label><label>Capacity<input id="capacity" type="number" min="1"></label></div>
@@ -33,7 +33,7 @@ const presetData = Object.fromEntries(classTypePresets.map((type) => [type.id, t
           <label>Payment link <span class="field-note">Leave blank for classes that are contact-only.</span><input id="paymentUrl" type="url"></label>
           <label>Description<textarea id="description" rows="4"></textarea></label><label>Admin notes<textarea id="notes" rows="3"></textarea></label>
           <div id="reminder-settings" class="reminder-settings" hidden><div><p class="eyebrow">Automatic reminders</p><h3>Send the day before each class</h3><p class="field-note">The selected email template is sent automatically to registered students the day before each weekly session.</p></div><label class="toggle-row"><input id="autoReminders" type="checkbox"><span>Enable automatic reminders</span></label><label>Send at <input id="autoReminderTime" type="time" value="12:00"></label><p class="field-note">Time is based on Alberta local time. The system calculates the weekly session dates from the class start and end dates.</p></div>
-          <div class="modal-actions"><button id="cancel-modal" class="button outline" type="button">Cancel</button><button class="button primary" type="submit">Save class</button></div><p id="result" class="form-result"></p>
+          <div class="modal-actions"><button id="cancel-modal" class="button outline" type="button">Cancel</button><button id="save-class-button" class="button primary" type="submit">Save class</button></div><p id="result" class="form-result" role="status" aria-live="polite"></p>
         </form>
       </div>
     </div>
@@ -52,16 +52,56 @@ const presetData = Object.fromEntries(classTypePresets.map((type) => [type.id, t
     let all=[];
     const modal=$('class-modal');
     const setReminderVisibility=()=>{$('reminder-settings').hidden=$('typeId').value!=='eight-week-in-person'};
-    const resetForm=()=>{$('class-form').reset();$('classId').value='';$('autoReminderTime').value='12:00';$('autoReminders').checked=true;setReminderVisibility();$('modal-eyebrow').textContent='New class';$('modal-title').textContent='Create a class';$('modal-description').textContent='Choose a class type to pre-fill its standard details.';$('result').textContent='';};
+    const resetForm=()=>{$('class-form').reset();$('classId').value='';$('autoReminderTime').value='12:00';$('autoReminders').checked=true;setReminderVisibility();$('modal-eyebrow').textContent='New class';$('modal-title').textContent='Create a class';$('modal-description').textContent='Choose a class type to pre-fill its standard details.';$('result').textContent='';$('result').removeAttribute('data-error');};
     const openNew=()=>{resetForm();modal.hidden=false;document.body.style.overflow='hidden';$('typeId').focus()};
     const closeModal=()=>{modal.hidden=true;document.body.style.overflow=''};
     const fillFromPreset=()=>{const p=presets[$('typeId').value];if(!p)return;$('title').value=p.name||'';$('description').value=p.description||'';$('notes').value=p.notes||'';$('price').value=p.defaultPriceCents!=null?(p.defaultPriceCents/100).toFixed(2):'';$('schedule').value=p.schedule||'';$('locationName').value=p.locationName||'';$('locationAddress').value=p.locationAddress||'';$('parking').value=p.parking||'';$('whereToGo').value=p.whereToGo||'';$('whatToBring').value=p.whatToBring||'';setReminderVisibility()};
-    const openEdit=(id)=>{const c=all.find(x=>x.id===id);if(!c)return;resetForm();$('classId').value=c.id;$('typeId').value=c.type_id;$('title').value=c.title||'';$('price').value=c.price_cents!=null?(Number(c.price_cents)/100).toFixed(2):'';$('startDate').value=c.start_date||'';$('endDate').value=c.end_date||'';$('startTime').value=c.start_time||'';$('endTime').value=c.end_time||'';$('schedule').value=c.schedule||'';$('capacity').value=c.capacity||'';$('locationName').value=c.location_name||'';$('locationAddress').value=c.location_address||'';$('parking').value=c.parking||'';$('whereToGo').value=c.where_to_go||'';$('whatToBring').value=c.what_to_bring||'';$('paymentUrl').value=c.payment_url||'';$('description').value=c.description||'';$('notes').value=c.notes||'';$('autoReminders').checked=Number(c.auto_reminders_enabled)===1;$('autoReminderTime').value=c.auto_reminder_time||'12:00';setReminderVisibility();$('modal-eyebrow').textContent='Edit class';$('modal-title').textContent='Edit class';$('modal-description').textContent='Update any class option. For an 8-week class, reminder dates are recalculated from the dates you save.';modal.hidden=false;document.body.style.overflow='';document.body.style.overflow='hidden';$('title').focus()};
+    const openEdit=(id)=>{const c=all.find(x=>x.id===id);if(!c)return;resetForm();$('classId').value=c.id;$('typeId').value=c.type_id;$('title').value=c.title||'';$('price').value=c.price_cents!=null?(Number(c.price_cents)/100).toFixed(2):'';$('startDate').value=c.start_date||'';$('endDate').value=c.end_date||'';$('startTime').value=c.start_time||'';$('endTime').value=c.end_time||'';$('schedule').value=c.schedule||'';$('capacity').value=c.capacity||'';$('locationName').value=c.location_name||'';$('locationAddress').value=c.location_address||'';$('parking').value=c.parking||'';$('whereToGo').value=c.where_to_go||'';$('whatToBring').value=c.what_to_bring||'';$('paymentUrl').value=c.payment_url||'';$('description').value=c.description||'';$('notes').value=c.notes||'';$('autoReminders').checked=Number(c.auto_reminders_enabled)===1;$('autoReminderTime').value=c.auto_reminder_time||'12:00';setReminderVisibility();$('modal-eyebrow').textContent='Edit class';$('modal-title').textContent='Edit class';$('modal-description').textContent='Update any class option. For an 8-week class, reminder dates are recalculated from the dates you save.';modal.hidden=false;document.body.style.overflow='hidden';$('title').focus()};
     const classDateLabel=(c)=>{const s=new Date(`${c.start_date}T12:00:00Z`),e=new Date(`${c.end_date}T12:00:00Z`);const fmt=d=>new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric'}).format(d);return `${fmt(s)} – ${fmt(e)}`};
+    const load=async()=>{try{const r=await fetch('/api/admin/classes');if(r.status===401){location='/admin-login';return}const d=await r.json();all=d.classes||[];const today=new Date().toISOString().slice(0,10);const upcoming=all.filter(c=>c.end_date>=today);const archived=all.filter(c=>c.end_date<today).sort((a,b)=>b.end_date.localeCompare(a.end_date));$('upcoming').innerHTML=upcoming.length?upcoming.map(c=>row(c)).join(''):'<div class="admin-empty">No upcoming classes.</div>';$('archived').innerHTML=archived.length?archived.map(c=>row(c,true)).join(''):'<div class="admin-empty">No archived classes yet.</div>';document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>openEdit(b.dataset.edit)))}catch(error){console.error('Unable to load classes',error);$('upcoming').innerHTML='<div class="admin-empty">Unable to load classes. Please refresh and try again.</div>';}};
     const row=(c,archived=false)=>`<article class="class-card"><div class="class-card-main"><div class="class-card-top"><h3>${esc(c.title)}</h3><span class="class-type">${esc(c.type_id)}</span>${archived?'<span class="archive-label">Archived</span>':''}</div><div class="class-meta"><span>📅 ${esc(classDateLabel(c))}</span><span>👥 ${Number(c.student_count||0)}${c.capacity?' / '+esc(c.capacity):''} students</span>${c.schedule?`<span>◷ ${esc(c.schedule)}</span>`:''}</div></div><div class="class-card-actions">${!archived&&c.type_id==='eight-week-in-person'?`<span class="reminder-pill ${Number(c.auto_reminders_enabled)===1?'':'off'}">${Number(c.auto_reminders_enabled)===1?'Reminders on':'Reminders off'}</span>`:''}<a class="button outline" href="/class-students/${encodeURIComponent(c.id)}">Roster</a><button class="button outline" type="button" data-edit="${esc(c.id)}">Edit</button></div></article>`;
-    const load=async()=>{const r=await fetch('/api/admin/classes');if(r.status===401){location='/admin-login';return}const d=await r.json();all=d.classes||[];const today=new Date().toISOString().slice(0,10);const upcoming=all.filter(c=>c.end_date>=today);const archived=all.filter(c=>c.end_date<today).sort((a,b)=>b.end_date.localeCompare(a.end_date));$('upcoming').innerHTML=upcoming.length?upcoming.map(c=>row(c)).join(''):'<div class="admin-empty">No upcoming classes.</div>';$('archived').innerHTML=archived.length?archived.map(c=>row(c,true)).join(''):'<div class="admin-empty">No archived classes yet.</div>';document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>openEdit(b.dataset.edit)))};
     $('new-class-button').addEventListener('click',openNew);$('close-modal').addEventListener('click',closeModal);$('cancel-modal').addEventListener('click',closeModal);modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});$('typeId').addEventListener('change',fillFromPreset);
-    $('class-form').addEventListener('submit',async(e)=>{e.preventDefault();const body={action:$('classId').value?'update':undefined,classId:$('classId').value||undefined,typeId:$('typeId').value,title:$('title').value,startDate:$('startDate').value,endDate:$('endDate').value,startTime:$('startTime').value,endTime:$('endTime').value,price:$('price').value,schedule:$('schedule').value,capacity:$('capacity').value,locationName:$('locationName').value,locationAddress:$('locationAddress').value,parking:$('parking').value,whereToGo:$('whereToGo').value,whatToBring:$('whatToBring').value,paymentUrl:$('paymentUrl').value,description:$('description').value,notes:$('notes').value,autoReminders:$('typeId').value==='eight-week-in-person'&&$('autoReminders').checked,autoReminderTime:$('autoReminderTime').value};const r=await fetch('/api/admin/classes',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const d=await r.json();$('result').textContent=r.ok?'Saved.':(d.error||'Unable to save class.');if(r.ok){closeModal();await load()}});
+    $('class-form').addEventListener('submit',async(e)=>{
+      e.preventDefault();
+      const result=$('result');
+      const saveButton=$('save-class-button');
+      result.textContent='';
+      result.removeAttribute('data-error');
+      if(!e.currentTarget.reportValidity()){
+        result.textContent='Please complete the required fields above.';
+        result.setAttribute('data-error','true');
+        return;
+      }
+      if($('endDate').value < $('startDate').value){
+        result.textContent='End date cannot be before the start date.';
+        result.setAttribute('data-error','true');
+        $('endDate').focus();
+        return;
+      }
+      const body={action:$('classId').value?'update':undefined,classId:$('classId').value||undefined,typeId:$('typeId').value,title:$('title').value,startDate:$('startDate').value,endDate:$('endDate').value,startTime:$('startTime').value,endTime:$('endTime').value,price:$('price').value,schedule:$('schedule').value,capacity:$('capacity').value,locationName:$('locationName').value,locationAddress:$('locationAddress').value,parking:$('parking').value,whereToGo:$('whereToGo').value,whatToBring:$('whatToBring').value,paymentUrl:$('paymentUrl').value,description:$('description').value,notes:$('notes').value,autoReminders:$('typeId').value==='eight-week-in-person'&&$('autoReminders').checked,autoReminderTime:$('autoReminderTime').value};
+      saveButton.disabled=true;
+      saveButton.textContent='Saving…';
+      try{
+        const r=await fetch('/api/admin/classes',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+        const contentType=r.headers.get('content-type')||'';
+        const d=contentType.includes('application/json')?await r.json():{error:await r.text()};
+        if(!r.ok){
+          result.textContent=d.error||`Unable to save class (HTTP ${r.status}).`;
+          result.setAttribute('data-error','true');
+          return;
+        }
+        result.textContent='Saved.';
+        closeModal();
+        await load();
+      }catch(error){
+        console.error('Unable to save class',error);
+        result.textContent='Unable to save the class. Please check your connection and try again.';
+        result.setAttribute('data-error','true');
+      }finally{
+        saveButton.disabled=false;
+        saveButton.textContent='Save class';
+      }
+    });
     load();
   </script>
 </BaseLayout>
