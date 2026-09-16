@@ -6,11 +6,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <img class="hero-heart" src="/hero-heart.PNG" alt="A cracked heart glowing with warm light" />
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <p class="eyebrow light">A safe place for healing</p>
-      <h1>You don't have to carry it alone.</h1>
-      <p class="hero-copy">A Christ-centred journey where you can honestly face the wounds of your past, discover truth, and allow Jesus to bring healing and restoration.</p>
-      <div class="actions"><a class="button primary" href="/journey">Explore the journey</a><a class="button ghost" href="/what-to-expect">What to expect</a></div>
+      <p class="eyebrow light">HEALING • RESTORATION • FREEDOM</p>
+      <h1>Healing the<br /><em>Heart</em></h1>
+      <p class="hero-copy">Break free from the past. Discover hope for today. Build a healthier tomorrow.</p>
+      <div class="actions left"><a class="button primary" href="/classes">Explore Our Classes <span aria-hidden="true">→</span></a><a class="button ghost" href="/journey">Discover the journey</a></div>
     </div>
+    <div class="hero-scroll" aria-hidden="true"><span></span>Begin your journey</div>
   </section>
 
   <section class="welcome section">
@@ -47,62 +48,105 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 </BaseLayout>
 
 <style>
+  .home-header {
+    position: absolute;
+    inset: 0 0 auto;
+    background: linear-gradient(180deg, rgba(20,30,28,.62), rgba(20,30,28,0));
+    border-bottom-color: rgba(255,255,255,.08);
+    backdrop-filter: blur(7px);
+  }
+
+  .home-header .brand,
+  .home-header .desktop-nav a { color: #fff; }
+
+  .home-header .brand-heart {
+    background: transparent;
+    border: 1px solid rgba(255,210,112,.8);
+    color: #ffd270;
+    font-size: .95rem;
+    box-shadow: 0 0 20px rgba(255,184,65,.18);
+  }
+
+  .home-header .brand-name { letter-spacing: .18em; }
+  .home-header .brand-name i { color: #ffd270; opacity: .9; }
+  .home-header .nav-cta { background: #f4bd52; color: #1d211d !important; padding: .75rem 1.25rem; box-shadow: 0 8px 25px rgba(0,0,0,.16); }
+
   .hero-home {
-    min-height: 82vh;
-    background: #151c19;
-    isolation: isolate;
+    min-height: min(920px, 100vh);
+    display:flex;
+    align-items:center;
+    background:#9d5a2e;
+    isolation:isolate;
   }
 
   .hero-heart {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    z-index: -2;
-    filter: saturate(.94) contrast(1.04);
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center;
+    z-index:-3;
+    filter:saturate(1.22) brightness(1.08) contrast(.98);
   }
 
   .hero-overlay {
-    z-index: -1;
+    position:absolute;
+    inset:0;
+    z-index:-2;
     background:
-      linear-gradient(180deg, rgba(8, 14, 12, .42) 0%, rgba(8, 14, 12, .16) 42%, rgba(8, 14, 12, .62) 100%),
-      linear-gradient(90deg, #151c19 0%, rgba(21, 28, 25, .72) 7%, rgba(8, 14, 12, .10) 20%, rgba(8, 14, 12, .10) 80%, rgba(21, 28, 25, .72) 93%, #151c19 100%);
+      radial-gradient(circle at 70% 52%, rgba(255,191,70,.18), transparent 31%),
+      linear-gradient(90deg, rgba(31,26,20,.78) 0%, rgba(31,26,20,.47) 24%, rgba(28,23,18,.08) 54%, rgba(42,24,14,.08) 100%),
+      linear-gradient(180deg, rgba(19,26,24,.16) 0%, rgba(255,151,49,.04) 48%, rgba(93,39,15,.20) 100%);
   }
 
   .hero-home::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 190px;
-    z-index: -1;
-    pointer-events: none;
-    background: linear-gradient(180deg, rgba(21, 28, 25, 0) 0%, rgba(21, 28, 25, .42) 42%, #151c19 100%);
+    content:"";
+    position:absolute;
+    inset:auto 0 0;
+    height:170px;
+    z-index:-1;
+    pointer-events:none;
+    background:linear-gradient(180deg, transparent, rgba(53,29,17,.32));
   }
 
   .hero-content {
-    max-width: 980px;
-    padding: 8rem 6vw;
-    text-shadow: 0 2px 22px rgba(0,0,0,.32);
+    position:relative;
+    max-width:620px;
+    padding:9rem 6vw 7rem;
+    text-align:left;
+    text-shadow:0 3px 28px rgba(0,0,0,.3);
   }
 
   .hero-content h1 {
-    max-width: 900px;
-    margin-inline: auto;
+    max-width:620px;
+    margin:0 0 1.35rem;
+    font-size:clamp(4.2rem,8vw,7.8rem);
+    line-height:.88;
+    letter-spacing:-.055em;
   }
 
-  @media (max-width: 700px) {
-    .hero-home { min-height: 78vh; }
-    .hero-heart { object-position: center; }
-    .hero-overlay {
-      background:
-        linear-gradient(180deg, rgba(8,14,12,.48), rgba(8,14,12,.22) 38%, rgba(8,14,12,.72)),
-        linear-gradient(90deg, #151c19 0%, rgba(21,28,25,.58) 9%, rgba(8,14,12,.10) 22%, rgba(8,14,12,.10) 78%, rgba(21,28,25,.58) 91%, #151c19 100%);
-    }
-    .hero-home::after { height: 150px; }
-    .hero-content { padding: 6rem 6vw; }
+  .hero-content h1 em { color:#ffd06b; font-style:italic; font-weight:400; }
+  .hero-copy { max-width:500px; margin:0 0 2rem; font-size:clamp(1.08rem,1.8vw,1.3rem); color:rgba(255,255,255,.94); }
+  .hero-content .eyebrow { margin-bottom:1.15rem; color:#ffd270; letter-spacing:.22em; }
+  .hero-content .actions { gap:1rem; }
+  .hero-content .button.primary { background:#f3bd50; color:#1c211d; box-shadow:0 10px 30px rgba(0,0,0,.2); }
+  .hero-content .button.primary span { margin-left:.35rem; font-size:1.05em; }
+  .hero-content .button.ghost { border-color:rgba(255,255,255,.48); background:rgba(255,255,255,.06); backdrop-filter:blur(5px); }
+
+  .hero-scroll { position:absolute; right:5vw; bottom:2.3rem; display:flex; align-items:center; gap:.7rem; color:rgba(255,255,255,.72); font-size:.65rem; letter-spacing:.14em; text-transform:uppercase; }
+  .hero-scroll span { width:30px; height:1px; background:#ffd270; }
+
+  .welcome { background:#fffaf2; }
+  .statement-band { background:linear-gradient(100deg,#ead3b5,#f1c27a 50%,#ead3b5); }
+
+  @media(max-width:800px){
+    .home-header { position:absolute; background:linear-gradient(180deg,rgba(20,30,28,.72),transparent); }
+    .hero-home { min-height:88vh; align-items:flex-end; }
+    .hero-heart { object-position:center; filter:saturate(1.18) brightness(1.04) contrast(.98); }
+    .hero-overlay { background:linear-gradient(180deg,rgba(20,27,24,.22),rgba(29,22,16,.16) 35%,rgba(38,23,14,.68) 100%); }
+    .hero-content { max-width:700px; padding:7rem 6vw 5.5rem; }
+    .hero-content h1 { font-size:clamp(3.6rem,15vw,6rem); }
+    .hero-scroll { display:none; }
   }
 </style>
