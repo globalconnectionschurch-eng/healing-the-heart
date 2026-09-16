@@ -1,0 +1,54 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Complete Your Profile | Healing the Heart">
+  <main class="wrap">
+    <section class="card">
+      <div class="intro"><span class="eyebrow">Healing the Heart</span><h1>Complete your profile</h1><p id="intro-copy">We'd like to make sure we have the information you want us to know about your healing journey. You can leave anything blank that you don't want to answer.</p></div>
+      <div id="loading" class="state">Loading your secure profile link…</div>
+      <form id="profile-form" hidden>
+        <div class="section"><div class="section-head"><span>01</span><div><h2>Your journey</h2><p>Share only what you're comfortable sharing.</p></div></div>
+          <label>Do you have any diagnosis?<textarea name="diagnosis" placeholder="Optional"></textarea></label>
+          <label>Do you have any learning restrictions?<textarea name="learning_restrictions" placeholder="Optional"></textarea></label>
+          <label>Are you adopted?<select name="adopted"><option value="">Choose</option><option>Yes</option><option>No</option><option>Prefer not to say</option></select></label>
+          <label>Is there any major trauma that you've been through?<textarea name="major_trauma" placeholder="Optional"></textarea></label>
+          <label>Have you just lost somebody or are you grieving something specific?<textarea name="grief" placeholder="Optional"></textarea></label>
+          <label>Are you in Ministry?<select name="in_ministry"><option value="">Choose</option><option>Yes</option><option>No</option></select></label>
+          <label>Do you have any dietary restrictions or food allergies?<textarea name="dietary_restrictions" placeholder="Optional"></textarea></label>
+        </div>
+        <div class="section"><div class="section-head"><span>02</span><div><h2>Current support needs</h2><p>These answers help our team understand what support may be relevant.</p></div></div>
+          <div class="question"><strong>Do you have any current crisis that you want us to be aware of?</strong><small>Select all that apply.</small><div class="choices"><label><input type="checkbox" name="current_crisis" value="Marriage problems"><span>Marriage problems</span></label><label><input type="checkbox" name="current_crisis" value="Alcohol addiction"><span>Alcohol addiction</span></label><label><input type="checkbox" name="current_crisis" value="Porn addiction"><span>Porn addiction</span></label><label><input type="checkbox" name="current_crisis" value="Grieving the loss of a family member"><span>Grieving the loss of a family member</span></label></div><label class="other">Other current crisis / something specific we should know<textarea id="crisis-other" placeholder="Optional"></textarea></label></div>
+          <label>Have you ever considered any type of self-harm?<select name="self_harm_history"><option value="">Choose</option><option>Yes</option><option>No</option><option>Prefer not to say</option></select></label>
+        </div>
+        <div class="actions"><span id="result"></span><button class="button" type="submit">Save my profile</button></div>
+      </form>
+      <div id="done" class="done" hidden><div class="check">✓</div><h2>Thank you.</h2><p>Your profile information has been updated. You can close this page now.</p></div>
+      <div id="error" class="error" hidden></div>
+    </section>
+  </main>
+  <script is:inline>
+    const token=new URLSearchParams(location.search).get('token')||'';
+    const form=document.querySelector('#profile-form'),loading=document.querySelector('#loading'),error=document.querySelector('#error'),done=document.querySelector('#done'),result=document.querySelector('#result'),other=document.querySelector('#crisis-other');
+    const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    function showError(message){loading.hidden=true;form.hidden=true;error.hidden=false;error.textContent=message}
+    async function load(){
+      if(!token){showError('This profile link is missing its secure token. Please ask the person who sent it to you for a new link.');return}
+      const r=await fetch('/api/profile-complete?token='+encodeURIComponent(token));
+      if(!r.ok){let d={};try{d=await r.json()}catch{}showError(d.error||'This profile link is invalid or has expired.');return}
+      const {student}=await r.json();
+      loading.hidden=true;form.hidden=false;
+      for(const n of ['diagnosis','learning_restrictions','adopted','major_trauma','grief','in_ministry','dietary_restrictions','self_harm_history'])form.elements[n].value=student[n]||'';
+      const crisis=String(student.current_crisis||'');
+      const otherMatch=crisis.match(/(?:^|, )Other: (.+)$/);
+      const choices=otherMatch?crisis.replace(/,? Other: .+$/,''):crisis;
+      form.querySelectorAll('[name="current_crisis"]').forEach(c=>c.checked=choices.split(', ').includes(c.value));
+      if(otherMatch)other.value=otherMatch[1];
+      document.querySelector('#intro-copy').innerHTML=`Hello ${esc(student.name||'')}. Please review and complete the information below.`;
+    }
+    form.addEventListener('submit',async e=>{e.preventDefault();result.textContent='Saving…';const current=[...form.querySelectorAll('[name="current_crisis"]:checked')].map(x=>x.value);if(other.value.trim())current.push('Other: '+other.value.trim());const body={};for(const n of ['diagnosis','learning_restrictions','adopted','major_trauma','grief','in_ministry','dietary_restrictions','self_harm_history'])body[n]=form.elements[n].value;body.current_crisis=current;const r=await fetch('/api/profile-complete?token='+encodeURIComponent(token),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});if(r.ok){form.hidden=true;done.hidden=false}else{let d={};try{d=await r.json()}catch{}result.textContent=d.error||'Unable to save your profile. Please try again.'}});
+    load();
+  </script>
+  <style>
+    .wrap{min-height:100vh;padding:4rem 1.2rem 6rem;background:#f5f5f2;color:#242a26}.card{max-width:760px;margin:auto;background:#fff;border:1px solid #dedfdb;border-radius:26px;box-shadow:0 20px 70px rgba(20,25,22,.08);overflow:hidden}.intro{padding:2.4rem 2.5rem 1.7rem;border-bottom:1px solid #e5e6e2}.eyebrow{font-size:.65rem;text-transform:uppercase;letter-spacing:.15em;font-weight:800;color:#818781}.intro h1{margin:.4rem 0 .55rem;font-size:clamp(2rem,5vw,3rem);letter-spacing:-.045em}.intro p{margin:0;line-height:1.7;color:#747b76;font-size:.84rem}.section{margin:1rem 1.2rem;background:#fafaf8;border:1px solid #e1e2de;border-radius:19px;padding:1.3rem 1.35rem;display:grid;gap:1rem}.section-head{display:flex;gap:.8rem;align-items:flex-start;border-bottom:1px solid #e5e6e2;padding-bottom:1rem}.section-head>span{font-size:.62rem;font-weight:900;color:#999f9a;letter-spacing:.1em}.section-head h2{margin:0 0 .2rem;font-size:.95rem}.section-head p{margin:0;font-size:.68rem;color:#929791}.section label{display:grid;gap:.42rem;font-size:.68rem;font-weight:800;color:#737a75}.section textarea,.section select{width:100%;box-sizing:border-box;border:1px solid #d4d6d2;border-radius:12px;background:#fff;padding:.78rem .82rem;font:inherit;font-size:.82rem;color:#303632;outline:0}.section textarea{min-height:90px;resize:vertical;line-height:1.55}.section select{height:46px}.section textarea:focus,.section select:focus{border-color:#9ea59f;box-shadow:0 0 0 4px rgba(40,48,43,.05)}.question{display:grid;gap:.5rem}.question strong{font-size:.72rem;color:#4b514d}.question>small{font-size:.63rem;color:#929791}.choices{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}.choices label{display:flex;align-items:center;gap:.55rem;border:1px solid #dfe0dc;border-radius:12px;padding:.72rem;background:#fff;cursor:pointer;font-size:.7rem;font-weight:600}.choices label:has(input:checked){border-color:#aeb4ae;background:#f5f5f1}.choices input{margin:0}.other{margin-top:.25rem}.other textarea{min-height:75px}.actions{display:flex;align-items:center;gap:.8rem;padding:1.1rem 2.4rem 2rem}.actions #result{margin-right:auto;font-size:.68rem;color:#7d837e}.button{border:0;border-radius:12px;background:#2f3731;color:#fff;padding:.82rem 1.2rem;font:inherit;font-size:.74rem;font-weight:800;cursor:pointer}.state,.error,.done{text-align:center;padding:4rem 2rem}.error{color:#805858;font-size:.8rem}.done{padding:4rem 2rem}.check{width:48px;height:48px;border-radius:15px;background:#edf4ee;display:grid;place-items:center;margin:0 auto 1rem;font-weight:900;color:#4d6752}.done h2{margin:.2rem 0 .4rem}.done p{margin:0;color:#7d837e;font-size:.8rem}@media(max-width:600px){.wrap{padding:1.2rem .7rem 3rem}.intro{padding:1.7rem 1.35rem}.section{margin:.75rem;padding:1.1rem}.choices{grid-template-columns:1fr}.actions{padding:1rem 1.2rem 1.4rem;flex-direction:column-reverse;align-items:stretch}.actions .button{width:100%}}
+  </style>
+</BaseLayout>
