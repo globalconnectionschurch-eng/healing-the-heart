@@ -1,0 +1,87 @@
+/* Healing the Heart — warm, vibrant site-wide visual layer */
+body:not(.admin-page){
+  --ink:#30251f;
+  --muted:#75665b;
+  --cream:#f7efe3;
+  --paper:#fffaf3;
+  --sage:#7b856d;
+  --deep:#49372d;
+  --ember:#c65f2e;
+  --gold:#e2a34f;
+  --sun:#f4c56b;
+  --line:rgba(86,61,43,.14);
+  background:var(--cream);
+  color:var(--ink);
+}
+body:not(.admin-page) .site-header:not(.home-header){
+  background:rgba(255,250,243,.94);
+  border-bottom:1px solid rgba(112,76,48,.12);
+  box-shadow:0 8px 28px rgba(86,61,43,.06);
+}
+body:not(.admin-page) .brand-heart{background:linear-gradient(145deg,#d87535,#b94e27);box-shadow:0 5px 18px rgba(198,95,46,.2)}
+body:not(.admin-page) .brand-name{color:#49372d}
+body:not(.admin-page) .brand-name i{color:#b36a3e}
+body:not(.admin-page) .desktop-nav{font-size:.86rem;gap:1.35rem}
+body:not(.admin-page) .desktop-nav a{color:#49372d}
+body:not(.admin-page) .desktop-nav a:hover{color:#c65f2e}
+body:not(.admin-page) .nav-cta{background:linear-gradient(135deg,#d87935,#bd592c);box-shadow:0 7px 20px rgba(190,87,43,.18)}
+body:not(.admin-page) .page-hero{
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 78% 28%,rgba(244,197,107,.7),transparent 30%),
+    radial-gradient(circle at 15% 80%,rgba(214,126,64,.2),transparent 35%),
+    linear-gradient(125deg,#f8ead8,#f2d1a4 52%,#e9b76f);
+  color:#382920;
+  border-bottom:1px solid rgba(116,75,42,.08);
+}
+body:not(.admin-page) .page-hero::after{content:"";position:absolute;inset:auto -5% -55% 35%;height:220px;border-radius:50%;background:rgba(255,248,235,.35);filter:blur(20px);pointer-events:none}
+body:not(.admin-page) .page-hero-inner{position:relative;z-index:1}
+body:not(.admin-page) .page-hero .eyebrow{color:#a64e29}
+body:not(.admin-page) .page-hero h1{color:#3b2a21}
+body:not(.admin-page) .page-hero p:last-child{color:#665449}
+body:not(.admin-page) .section{background:var(--cream)}
+body:not(.admin-page) .section:nth-of-type(even){background:#fffaf3}
+body:not(.admin-page) .welcome{background:#fffaf3}
+body:not(.admin-page) .eyebrow{color:#bd5b30}
+body:not(.admin-page) .lead{color:#49372d}
+body:not(.admin-page) .statement-band{background:linear-gradient(100deg,#e8b878,#f2ca7b 48%,#e6ae6c);color:#493226}
+body:not(.admin-page) .feature-card,
+body:not(.admin-page) .content-card{
+  background:rgba(255,250,243,.78);
+  border-color:rgba(112,76,48,.13);
+}
+body:not(.admin-page) .feature-card:hover{background:#fff8ed;box-shadow:0 14px 34px rgba(115,73,43,.08)}
+body:not(.admin-page) .feature-card span,
+body:not(.admin-page) .content-card .num{color:#c65f2e}
+body:not(.admin-page) .feature-card p,
+body:not(.admin-page) .content-card p,
+body:not(.admin-page) .section-heading>p:last-child,
+body:not(.admin-page) .split-callout>div:last-child{color:#75665b}
+body:not(.admin-page) .text-link{border-bottom-color:#c65f2e;color:#a64e29}
+body:not(.admin-page) .dark-section{background:linear-gradient(135deg,#4d392e,#654637 58%,#744a36);position:relative;overflow:hidden}
+body:not(.admin-page) .dark-section::before{content:"";position:absolute;width:460px;height:460px;right:-180px;top:-240px;border-radius:50%;background:rgba(244,197,107,.15);filter:blur(4px)}
+body:not(.admin-page) .dark-section .section-heading,
+body:not(.admin-page) .dark-section .pillars{position:relative;z-index:1}
+body:not(.admin-page) .dark-section .eyebrow{color:#f4c56b}
+body:not(.admin-page) .pillars{border-top-color:rgba(255,244,225,.2)}
+body:not(.admin-page) .pillars div{border-right-color:rgba(255,244,225,.2)}
+body:not(.admin-page) .pillars span{color:rgba(255,245,230,.72)}
+body:not(.admin-page) .button.primary{background:linear-gradient(135deg,#d97936,#bf592c);box-shadow:0 10px 24px rgba(171,75,37,.18)}
+body:not(.admin-page) .button.primary:hover{filter:brightness(1.06);transform:translateY(-1px)}
+body:not(.admin-page) .button.outline{border-color:rgba(112,76,48,.25);color:#594338;background:rgba(255,250,243,.38)}
+body:not(.admin-page) .button.outline:hover{border-color:#c65f2e;background:#fff8ed}
+body:not(.admin-page) .registration-form input,
+body:not(.admin-page) .registration-form select,
+body:not(.admin-page) .registration-form textarea{background:#fffaf3;border-color:rgba(112,76,48,.18)}
+body:not(.admin-page) .registration-form input:focus,
+body:not(.admin-page) .registration-form select:focus,
+body:not(.admin-page) .registration-form textarea:focus{outline:none;border-color:#d17a3c;box-shadow:0 0 0 3px rgba(226,163,79,.15)}
+body:not(.admin-page) .placeholder{background:rgba(255,250,243,.72);border-color:rgba(112,76,48,.2)}
+body:not(.admin-page) .site-footer{background:linear-gradient(135deg,#3f3028,#594033);color:rgba(255,246,232,.72)}
+body:not(.admin-page) .site-footer .footer-brand{color:#fff5e5}
+body:not(.admin-page) .site-footer a:hover{color:#f4c56b}
+@media(max-width:800px){
+  body:not(.admin-page) .mobile-links{background:#fffaf3;border-color:rgba(112,76,48,.15);box-shadow:0 18px 40px rgba(86,61,43,.14)}
+  body:not(.admin-page) .mobile-links a:hover{background:#f5e4d0}
+}
