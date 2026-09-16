@@ -102,7 +102,9 @@ export const POST: APIRoute = async ({ request }) => {
     const data = await request.json() as Record<string, any>;
     if (Array.isArray(data.students)) {
       const items = data.students as Record<string, any>[];
+      const classId = String(data.classId ?? '').trim();
       if (!items.length) return json({ error: 'Paste at least one student.' }, 400);
+      if (!classId) return json({ error: 'Choose a class first.' }, 400);
       const emailAction = String(data.emailAction ?? 'none');
       if (!['registration', 'custom', 'none'].includes(emailAction)) return json({ error: 'Invalid email action.' }, 400);
       if (emailAction === 'custom' && (!String(data.subject ?? '').trim() || !String(data.body ?? '').trim())) {
@@ -111,7 +113,7 @@ export const POST: APIRoute = async ({ request }) => {
       const results = [];
       for (const student of items) {
         try {
-          results.push({ name: student.name, email: student.email, ok: true, ...(await addStudent({ ...student, emailAction, subject: data.subject, body: data.body })) });
+          results.push({ name: student.name, email: student.email, ok: true, ...(await addStudent({ ...student, classId, emailAction, subject: data.subject, body: data.body })) });
         } catch (error) {
           results.push({ name: student.name, email: student.email, ok: false, error: error instanceof Error ? error.message : 'Unable to add student.' });
         }
