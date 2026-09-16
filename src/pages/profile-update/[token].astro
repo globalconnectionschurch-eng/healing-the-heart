@@ -1,0 +1,78 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+const token = Astro.params.token || '';
+---
+<BaseLayout title="Update Your Healing the Heart Profile" description="Securely review and update your Healing the Heart information.">
+  <main class="profile-update-page" data-token={token}>
+    <section class="profile-update-card">
+      <div class="profile-update-intro">
+        <span class="update-mark">♥</span>
+        <p class="eyebrow">Healing the Heart</p>
+        <h1>Let’s make sure we have your information right.</h1>
+        <p class="intro-copy">Please review the information below and update anything that is missing or needs to be corrected. Your changes will update your Healing the Heart record.</p>
+      </div>
+      <div id="update-status" class="update-status" role="status" hidden></div>
+      <form id="profile-update-form" novalidate hidden>
+        <section class="update-section">
+          <div class="section-heading"><span>01</span><div><h2>Contact</h2><p>How we can reach you</p></div></div>
+          <div class="update-grid">
+            <label>Full name<input name="name" autocomplete="name" required /></label>
+            <label>Email address<input name="email" type="email" autocomplete="email" required /></label>
+            <label>Phone<input name="phone" type="tel" autocomplete="tel" /></label>
+            <label>Date of birth<input name="date_of_birth" type="date" autocomplete="bday" /></label>
+          </div>
+          <label>Address<input name="address" autocomplete="street-address" /></label>
+        </section>
+        <section class="update-section">
+          <div class="section-heading"><span>02</span><div><h2>Background</h2><p>A little about you</p></div></div>
+          <div class="update-grid">
+            <label>Marital status<input name="marital_status" /></label>
+            <label>Church<input name="church" /></label>
+            <label>Senior pastor<input name="sr_pastor" /></label>
+            <label>How did you hear about Healing the Heart?<input name="how_heard" /></label>
+          </div>
+        </section>
+        <section class="update-section">
+          <div class="section-heading"><span>03</span><div><h2>Your healing journey</h2><p>Anything you would like us to know</p></div></div>
+          <label>What do you hope to gain from this course?<textarea name="goals" rows="5"></textarea></label>
+          <label>Do you have any smoking or drinking concern?<textarea name="smoking_drinking" rows="4"></textarea></label>
+          <label>Anything else you’d like to share to help us support your healing journey?<textarea name="anything_else" rows="5"></textarea></label>
+        </section>
+        <div class="update-footer"><p>Only use this page if you received a personal update link from the Healing the Heart team.</p><button class="submit-button" type="submit">Save my information</button></div>
+      </form>
+      <div id="loading" class="loading">Loading your secure update page…</div>
+      <div id="success" class="success" hidden><span class="success-icon">✓</span><h2>Thank you — your information has been updated.</h2><p>Your Healing the Heart record is now up to date.</p></div>
+    </section>
+  </main>
+  <script is:inline>
+    const root=document.querySelector('.profile-update-page');
+    const token=root?.dataset.token||'';
+    const form=document.querySelector('#profile-update-form');
+    const loading=document.querySelector('#loading');
+    const status=document.querySelector('#update-status');
+    const success=document.querySelector('#success');
+    const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    function showError(message){status.hidden=false;status.className='update-status error';status.innerHTML=`<strong>Please check the form.</strong><span>${esc(message)}</span>`}
+    function setValue(name,value){const el=form.elements[name];if(el)el.value=value??''}
+    async function loadProfile(){
+      try{
+        const r=await fetch(`/api/profile-update/${encodeURIComponent(token)}`,{cache:'no-store'});const d=await r.json();
+        if(!r.ok)throw new Error(d.error||'This update link is no longer available.');
+        const s=d.student||{};['name','email','phone','address','date_of_birth','marital_status','church','sr_pastor','how_heard','goals','smoking_drinking','anything_else'].forEach(k=>setValue(k,s[k]));
+        loading.hidden=true;form.hidden=false;
+      }catch(e){loading.hidden=true;showError(e instanceof Error?e.message:'This update link is no longer available.');}
+    }
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();status.hidden=true;
+      const data=Object.fromEntries(new FormData(form));
+      if(!String(data.name||'').trim()||!String(data.email||'').trim()){showError('Name and email address are required.');return}
+      const email=String(data.email).trim();if(!/^\S+@\S+\.\S+$/.test(email)){showError('Please enter a valid email address.');return}
+      const button=form.querySelector('button[type="submit"]');button.disabled=true;button.textContent='Saving…';
+      try{const r=await fetch(`/api/profile-update/${encodeURIComponent(token)}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});const d=await r.json();if(!r.ok)throw new Error(d.error||'Unable to save your information.');form.hidden=true;success.hidden=false}catch(err){showError(err instanceof Error?err.message:'Unable to save your information.');button.disabled=false;button.textContent='Save my information'}
+    });
+    if(!token)showError('This update link is invalid.');else loadProfile();
+  </script>
+  <style>
+    .profile-update-page{min-height:calc(100vh - 150px);background:#f6f5f1;padding:4rem 1.25rem 6rem;color:#222722}.profile-update-card{width:min(820px,100%);margin:0 auto;background:#fff;border:1px solid #dfdfda;border-radius:28px;box-shadow:0 22px 70px rgba(30,35,30,.08);overflow:hidden}.profile-update-intro{padding:3.5rem 3.5rem 2.5rem;border-bottom:1px solid #e8e8e3}.update-mark{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:#eeece7;color:#5c625d;margin-bottom:1.5rem}.eyebrow{margin:0;text-transform:uppercase;letter-spacing:.14em;font-size:.65rem;font-weight:800;color:#858b85}.profile-update-intro h1{font-size:clamp(2rem,4vw,3rem);letter-spacing:-.045em;line-height:1.08;margin:.45rem 0 .9rem;max-width:650px}.intro-copy{max-width:650px;margin:0;color:#707771;line-height:1.75}.update-status{margin:1.5rem 3.5rem 0;padding:1rem 1.1rem;border-radius:14px;display:grid;gap:.25rem;font-size:.8rem}.update-status.error{background:#fbf1f1;border:1px solid #efd9d9;color:#7b4b4b}.update-status span{line-height:1.5}.update-section{padding:2.5rem 3.5rem;border-bottom:1px solid #e8e8e3}.section-heading{display:flex;gap:.85rem;align-items:flex-start;margin-bottom:1.5rem}.section-heading>span{font-size:.62rem;font-weight:900;letter-spacing:.1em;color:#999f99;padding-top:.2rem}.section-heading h2{margin:0 0 .25rem;font-size:1.05rem;letter-spacing:-.02em}.section-heading p{margin:0;color:#8a908a;font-size:.72rem}.update-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}.update-section label{display:grid;gap:.45rem;margin-bottom:1rem;font-size:.7rem;font-weight:750;color:#535a54}.update-section label:last-child{margin-bottom:0}.update-section input,.update-section textarea{width:100%;box-sizing:border-box;border:1px solid #dfe0db;border-radius:12px;background:#fbfbf9;padding:.82rem .9rem;font:inherit;font-size:.85rem;color:#272c28;outline:0;transition:.18s}.update-section textarea{resize:vertical;line-height:1.55}.update-section input:focus,.update-section textarea:focus{border-color:#aeb4ae;box-shadow:0 0 0 4px rgba(50,55,50,.05);background:#fff}.update-footer{padding:2rem 3.5rem;display:flex;align-items:center;justify-content:space-between;gap:1.5rem;background:#fbfbf8}.update-footer p{margin:0;max-width:460px;color:#858b85;font-size:.68rem;line-height:1.55}.submit-button{border:0;border-radius:12px;background:#2d342e;color:#fff;padding:.85rem 1.2rem;font:inherit;font-weight:750;cursor:pointer;white-space:nowrap}.submit-button:hover{background:#202620}.submit-button:disabled{opacity:.6;cursor:wait}.loading{padding:2rem 3.5rem;color:#858b85;font-size:.8rem}.success{padding:4rem 3.5rem;text-align:center}.success-icon{width:58px;height:58px;margin:0 auto 1.25rem;border-radius:50%;display:grid;place-items:center;background:#edf4ee;color:#48634e;font-weight:900}.success h2{font-size:1.45rem;letter-spacing:-.03em;margin:.5rem 0}.success p{margin:0;color:#858b85;font-size:.8rem}@media(max-width:650px){.profile-update-page{padding:1.5rem .75rem 3rem}.profile-update-card{border-radius:20px}.profile-update-intro,.update-section{padding:2rem 1.35rem}.update-status{margin:1rem 1.35rem 0}.update-grid{grid-template-columns:1fr}.update-footer{padding:1.5rem 1.35rem;align-items:stretch;flex-direction:column}.submit-button{width:100%}.loading{padding:2rem 1.35rem}.success{padding:3rem 1.35rem}}
+  </style>
+</BaseLayout>
