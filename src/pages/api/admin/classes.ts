@@ -42,13 +42,17 @@ export const POST: APIRoute = async ({ request }) => {
 
   const classId = id('class');
   const now = nowIso();
-  await env.DB.prepare(`INSERT INTO classes (id,type_id,title,description,start_date,end_date,price_cents,capacity,schedule,location_name,location_address,parking,where_to_go,what_to_bring,notes,payment_url,created_at,updated_at)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
+  const isEightWeek = data.typeId === 'eight-week-in-person';
+  const autoReminders = isEightWeek && data.autoReminders !== false;
+  const reminderTime = String(data.autoReminderTime ?? '12:00').match(/^([01]\d|2[0-3]):[0-5]\d$/)?.[0] ?? '12:00';
+
+  await env.DB.prepare(`INSERT INTO classes (id,type_id,title,description,start_date,end_date,price_cents,capacity,schedule,location_name,location_address,parking,where_to_go,what_to_bring,notes,payment_url,auto_reminders_enabled,auto_reminder_time,created_at,updated_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
     classId, data.typeId, data.title, data.description ?? '', startDate, endDate, priceCents, data.capacity ? Number(data.capacity) : null,
-    data.schedule ?? '', data.locationName ?? '', data.locationAddress ?? '', data.parking ?? '', data.whereToGo ?? '', data.whatToBring ?? '', data.notes ?? '', data.paymentUrl ?? '', now, now
+    data.schedule ?? '', data.locationName ?? '', data.locationAddress ?? '', data.parking ?? '', data.whereToGo ?? '', data.whatToBring ?? '', data.notes ?? '', data.paymentUrl ?? '', autoReminders ? 1 : 0, reminderTime, now, now
   ).run();
 
-  if (data.typeId === 'eight-week-in-person') {
+  if (isEightWeek) {
     const start = new Date(`${startDate}T12:00:00Z`);
     const end = new Date(`${endDate}T12:00:00Z`);
     let number = 1;
