@@ -20,7 +20,12 @@ export const POST: APIRoute = async ({ request }) => {
   const name = String(data.name ?? '').trim();
   const email = String(data.email ?? '').trim().toLowerCase();
   const classId = String(data.classId ?? '').trim();
+  const emailAction = String(data.emailAction ?? 'registration').trim();
   if (!name || !email || !classId) return json({ error: 'Name, email, and class are required.' }, 400);
+  if (!['registration', 'custom', 'none'].includes(emailAction)) return json({ error: 'Invalid email action.' }, 400);
+
+  const classRow = await env.DB.prepare('SELECT * FROM classes WHERE id=?').bind(classId).first<any>();
+  if (!classRow) return json({ error: 'Class not found.' }, 404);
 
   const now = nowIso();
   const existing = await env.DB.prepare('SELECT id FROM students WHERE lower(email)=?').bind(email).first<{id:string}>();
@@ -36,17 +41,41 @@ export const POST: APIRoute = async ({ request }) => {
     id('registration'), classId, studentId, 'admin', verificationCode, 'pending', 'registered', now
   ).run();
 
-  const classRow = await env.DB.prepare('SELECT * FROM classes WHERE id=?').bind(classId).first<any>();
-  const saved = await env.DB.prepare('SELECT * FROM email_templates WHERE system_key=?').bind('manual-add-registration-required').first<any>();
-  const fallback = emailTemplates.find((item) => item.id === 'manual-add-registration-required')!;
-  const subject = saved?.subject ?? fallback.subject;
-  const body = fillTemplate(saved?.body ?? fallback.body, {
-    firstName: name.split(/\s+/)[0], classTitle: classRow?.title ?? '', verificationCode,
-    registrationLink: `${env.SITE_URL}/register`, contactEmail: env.CONTACT_EMAIL, siteUrl: env.SITE_URL
-  });
+  if (emailAction === 'none') {
+    return json({ ok: true, studentId, verificationCode, emailSent: false, emailAction });
+  }
+
+  let subject = '';
+  let body = '';
+  let templateId: string | null = null;
+
+  if (emailAction === 'registration') {
+    const saved = await env.DB.prepare('SELECT * FROM email_templates WHERE system_key=?').bind('manual-add-registration-required').first<any>();
+    const fallback = emailTemplates.find((item) => item.id === 'manual-add-registration-required')!;
+    templateId = saved?.id ?? fallback.id;
+    subject = saved?.subject ?? fallback.subject;
+    body = fillTemplate(saved?.body ?? fallback.body, {
+      firstName: name.split(/\s+/)[0], classTitle: classRow.title ?? '', verificationCode,
+      registrationLink: `${env.SITE_URL}/register`, contactEmail: env.CONTACT_EMAIL, siteUrl: env.SITE_URL
+    });
+  } else {
+    subject = String(data.subject ?? '').trim();
+    body = String(data.body ?? '').trim();
+    if (!subject || !body) return json({ error: 'Subject and message are required for a customer email.' }, 400);
+    body = fillTemplate(body, {
+      firstName: name.split(/\s+/)[0], classTitle: classRow.title ?? '', verificationCode,
+      registrationLink: `${env.SITE_URL}/register`, contactEmail: env.CONTACT_EMAIL, siteUrl: env.SITE_URL,
+      locationName: classRow.location_name ?? '', locationAddress: classRow.location_address ?? '',
+      schedule: classRow.schedule ?? '', dateRange: `${classRow.start_date ?? ''} – ${classRow.end_date ?? ''}`,
+      parking: classRow.parking ?? '', whereToGo: classRow.where_to_go ?? '', classTime: classRow.schedule ?? '', weekday: ''
+    });
+    subject = fillTemplate(subject, { firstName: name.split(/\s+/)[0], classTitle: classRow.title ?? '', classTime: classRow.schedule ?? '' });
+  }
+
   const sent = await sendEmail(email, subject, body);
   await env.DB.prepare(`INSERT INTO email_logs (id,template_id,class_id,student_id,recipient_email,subject,status,provider_message_id,error,sent_at) VALUES (?,?,?,?,?,?,?,?,?,?)`).bind(
-    id('email'), saved?.id ?? fallback.id, classId, studentId, email, subject, sent.sent ? 'sent' : 'failed', sent.messageId ?? null, sent.error ?? null, now
+    id('email'), templateId, classId, studentId, email, subject, sent.sent ? 'sent' : 'failed', sent.messageId ?? null, sent.error ?? null, now
   ).run();
-  return json({ ok: true, studentId, verificationCode, emailSent: sent.sent });
+
+  return json({ ok: true, studentId, verificationCode, emailSent: sent.sent, emailAction });
 };
