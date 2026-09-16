@@ -2,6 +2,7 @@
 import '../styles/global.css';
 const { title = 'Healing the Heart', description = 'A Christ-centred journey toward healing, truth, restoration, and freedom.' } = Astro.props;
 const isHome = Astro.url.pathname === '/';
+const isAdmin = Astro.url.pathname.startsWith('/admin') || Astro.url.pathname === '/admin-login';
 ---
 <html lang="en">
   <head>
@@ -9,6 +10,7 @@ const isHome = Astro.url.pathname === '/';
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
     <title>{title}</title>
+    <link rel="stylesheet" href="/site-warmth.css?v=20260916-1" />
     <link rel="stylesheet" href="/attendee-directory.css" />
     <link rel="stylesheet" href="/admin-dashboard.css" />
     <link rel="stylesheet" href="/admin-fixes.css" />
@@ -16,7 +18,7 @@ const isHome = Astro.url.pathname === '/';
     <link rel="stylesheet" href="/admin-attendee-tools.css" />
     <link rel="stylesheet" href="/home-hero-nav.css" />
   </head>
-  <body>
+  <body class:list={{ 'admin-page': isAdmin }}>
     <header class:list={['site-header', { 'home-header': isHome }]}>
       <a class="brand" href="/" aria-label="Healing the Heart home"><span class="brand-heart">♥</span><span class="brand-name">HEALING <i>THE</i> HEART</span></a>
       <nav class="desktop-nav" aria-label="Main navigation"><a href="/journey">The Journey</a><a href="/what-we-help-with">What We Help With</a><a href="/what-to-expect">What to Expect</a><a href="/classes">Classes</a><a href="/about">Our Story</a><a href="/faq">FAQ</a><a href="/contact">Contact</a><a class="nav-cta" href="/register">Take the Next Step</a></nav>
