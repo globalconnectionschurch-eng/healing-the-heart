@@ -156,10 +156,19 @@ export function fillTemplate(template: string, values: Record<string, string | n
 export async function sendEmail(to: string, subject: string, text: string) {
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) return { sent: false, error: 'RESEND_API_KEY is not configured.' };
+
+  // Resend only permits production sends from a verified domain. The old
+  // Gmail sender was a development setting and must never be used for the
+  // Healing the Heart production mail flow.
+  const configuredFrom = env.FROM_EMAIL ?? '';
+  const fromEmail = configuredFrom.toLowerCase().includes('@healingtheheart.ca')
+    ? configuredFrom
+    : 'Healing the Heart <healing@healingtheheart.ca>';
+
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from: env.FROM_EMAIL, to: [to], subject, text, html: renderEmailHtml(text) })
+    body: JSON.stringify({ from: fromEmail, to: [to], subject, text, html: renderEmailHtml(text) })
   });
   const data = await response.json() as { id?: string; message?: string };
   if (!response.ok) return { sent: false, error: data.message ?? 'Email provider rejected the message.' };
