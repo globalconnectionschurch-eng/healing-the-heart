@@ -1,7 +1,6 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
-import { emailTemplates } from '../../../data/email-templates';
-import { fillTemplate, id, json, nowIso, sendEmail } from '../../../lib/server';
+import { json, nowIso } from '../../../lib/server';
 
 export const prerender = false;
 
@@ -48,20 +47,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     await env.DB.prepare(`UPDATE registrations SET payment_status='paid',status='registered',payment_transaction_id=?,paid_at=?,payment_error=NULL WHERE id=?`).bind(transactionId, now, registrationId).run();
 
-    if (row.type_id === 'eight-week-in-person') {
-      const saved = await env.DB.prepare('SELECT * FROM email_templates WHERE system_key=?').bind('eight-week-class-details').first<any>();
-      const fallback = emailTemplates.find((item) => item.id === 'eight-week-class-details')!;
-      const subjectTemplate = saved?.subject ?? fallback.subject;
-      const bodyTemplate = saved?.body ?? fallback.body;
-      const values = {
-        firstName: row.name.split(/\s+/)[0], classTitle: row.title, locationName: row.location_name || '', locationAddress: row.location_address || '', schedule: row.schedule || '', dateRange: `${row.start_date} – ${row.end_date}`, parking: row.parking || '', whereToGo: row.where_to_go || '', contactEmail: env.CONTACT_EMAIL, siteUrl: env.SITE_URL, paymentInstructions: 'Your payment has been received.'
-      };
-      const subject = fillTemplate(subjectTemplate, values);
-      const messageText = fillTemplate(bodyTemplate, values);
-      const sent = await sendEmail(row.email, subject, messageText);
-      await env.DB.prepare(`INSERT INTO email_logs (id,template_id,class_id,student_id,recipient_email,subject,status,provider_message_id,error,sent_at) VALUES (?,?,?,?,?,?,?,?,?,?)`).bind(id('email'), saved?.id ?? fallback.id, row.class_id, row.student_id, row.email, subject, sent.sent ? 'sent' : 'failed', sent.messageId ?? null, sent.error ?? null, now).run();
-    }
-
+    // Automatic post-payment emails are intentionally disabled for now.
     return json({ ok: true, paid: true, transactionId });
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : 'Unable to confirm payment.' }, 500);
