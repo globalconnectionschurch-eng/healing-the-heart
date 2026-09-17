@@ -9,7 +9,7 @@ async function addStudent(data: Record<string, any>) {
   const name = String(data.name ?? '').trim();
   const email = String(data.email ?? '').trim().replace(/\\@/g, '@').toLowerCase();
   const classId = String(data.classId ?? '').trim();
-  const emailAction = String(data.emailAction ?? 'registration').trim();
+  const emailAction = String(data.emailAction ?? 'none').trim();
   if (!name || !email || !classId) throw new Error('Name, email, and class are required.');
   if (!['registration', 'custom', 'none'].includes(emailAction)) throw new Error('Invalid email action.');
 
@@ -30,41 +30,35 @@ async function addStudent(data: Record<string, any>) {
     id('registration'), classId, studentId, 'admin', verificationCode, 'pending', 'registered', now
   ).run();
 
-  if (emailAction === 'none') return { studentId, verificationCode, emailSent: false, emailAction };
+  // Automatic registration emails are intentionally disabled for now.
+  // Custom emails remain available only when an admin explicitly requests one.
+  if (emailAction !== 'custom') return { studentId, verificationCode, emailSent: false, emailAction: 'none' };
 
-  let subject = '';
-  let body = '';
-  let templateId: string | null = null;
-  const vars = {
+  const subject = fillTemplate(String(data.subject ?? '').trim(), {
     firstName: name.split(/\s+/)[0], classTitle: classRow.title ?? '', verificationCode,
     registrationLink: `${env.SITE_URL}/register`, contactEmail: env.CONTACT_EMAIL, siteUrl: env.SITE_URL,
     locationName: classRow.location_name ?? '', locationAddress: classRow.location_address ?? '',
     schedule: classRow.schedule ?? '', dateRange: `${classRow.start_date ?? ''} – ${classRow.end_date ?? ''}`,
     parking: classRow.parking ?? '', whereToGo: classRow.where_to_go ?? '', classTime: classRow.schedule ?? '', weekday: ''
-  };
-
-  if (emailAction === 'registration') {
-    const saved = await env.DB.prepare('SELECT * FROM email_templates WHERE system_key=?').bind('manual-add-registration-required').first<any>();
-    const fallback = emailTemplates.find((item) => item.id === 'manual-add-registration-required')!;
-    templateId = saved?.id ?? fallback.id;
-    subject = fillTemplate(saved?.subject ?? fallback.subject, vars);
-    body = fillTemplate(saved?.body ?? fallback.body, vars);
-  } else {
-    subject = fillTemplate(String(data.subject ?? '').trim(), vars);
-    body = fillTemplate(String(data.body ?? '').trim(), vars);
-    if (!subject || !body) throw new Error('Subject and message are required for a customer email.');
-  }
+  });
+  const body = fillTemplate(String(data.body ?? '').trim(), {
+    firstName: name.split(/\s+/)[0], classTitle: classRow.title ?? '', verificationCode,
+    registrationLink: `${env.SITE_URL}/register`, contactEmail: env.CONTACT_EMAIL, siteUrl: env.SITE_URL,
+    locationName: classRow.location_name ?? '', locationAddress: classRow.location_address ?? '',
+    schedule: classRow.schedule ?? '', dateRange: `${classRow.start_date ?? ''} – ${classRow.end_date ?? ''}`,
+    parking: classRow.parking ?? '', whereToGo: classRow.where_to_go ?? '', classTime: classRow.schedule ?? '', weekday: ''
+  });
+  if (!subject || !body) throw new Error('Subject and message are required for a custom email.');
 
   const sent = await sendEmail(email, subject, body);
   await env.DB.prepare(`INSERT INTO email_logs (id,template_id,class_id,student_id,recipient_email,subject,status,provider_message_id,error,sent_at) VALUES (?,?,?,?,?,?,?,?,?,?)`).bind(
-    id('email'), templateId, classId, studentId, email, subject, sent.sent ? 'sent' : 'failed', sent.messageId ?? null, sent.error ?? null, now
+    id('email'), null, classId, studentId, email, subject, sent.sent ? 'sent' : 'failed', sent.messageId ?? null, sent.error ?? null, now
   ).run();
-  return { studentId, verificationCode, emailSent: sent.sent, emailAction };
+  return { studentId, verificationCode, emailSent: sent.sent, emailAction: 'custom' };
 }
 
 export const GET: APIRoute = async ({ request, url }) => {
   if (!(await isAdminRequest(request))) return json({ error: 'Unauthorized' }, 401);
-
   const q = (url.searchParams.get('q') || '').trim();
   if (q) {
     const pattern = `%${q}%`;
@@ -76,7 +70,6 @@ export const GET: APIRoute = async ({ request, url }) => {
     `).bind(pattern, pattern, pattern).all<any>();
     return json({ students: results });
   }
-
   const classId = url.searchParams.get('classId');
   if (!classId) return json({ students: [] });
   const { results } = await env.DB.prepare(`SELECT s.*, r.id AS registration_id, r.source, r.payment_status, r.status, r.registered_at, r.verification_code
@@ -108,7 +101,7 @@ export const POST: APIRoute = async ({ request }) => {
       const emailAction = String(data.emailAction ?? 'none');
       if (!['registration', 'custom', 'none'].includes(emailAction)) return json({ error: 'Invalid email action.' }, 400);
       if (emailAction === 'custom' && (!String(data.subject ?? '').trim() || !String(data.body ?? '').trim())) {
-        return json({ error: 'Subject and message are required for a customer email.' }, 400);
+        return json({ error: 'Subject and message are required for a custom email.' }, 400);
       }
       const results = [];
       for (const student of items) {
@@ -120,7 +113,6 @@ export const POST: APIRoute = async ({ request }) => {
       }
       return json({ ok: results.every((item) => item.ok), results, addedCount: results.filter((item) => item.ok).length, failedCount: results.filter((item) => !item.ok).length });
     }
-
     const result = await addStudent(data);
     return json({ ok: true, ...result });
   } catch (error) {
