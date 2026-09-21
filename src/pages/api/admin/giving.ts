@@ -4,8 +4,29 @@ import { isAdminRequest, json, nowIso } from '../../../lib/server';
 
 export const prerender = false;
 
+async function ensureGivingTable() {
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS giving_transactions (
+    id TEXT PRIMARY KEY,
+    student_id TEXT NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
+    source TEXT NOT NULL CHECK (source IN ('online','terminal','cash','other')),
+    method TEXT NOT NULL CHECK (method IN ('credit_card','debit','cash','etransfer','other')),
+    purpose TEXT NOT NULL DEFAULT 'ministry_support',
+    amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+    currency TEXT NOT NULL DEFAULT 'CAD',
+    transaction_id TEXT UNIQUE,
+    external_reference TEXT,
+    status TEXT NOT NULL DEFAULT 'completed' CHECK (status IN ('pending','completed','failed','refunded','voided')),
+    occurred_at TEXT NOT NULL,
+    notes TEXT,
+    created_by TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`).run();
+}
+
 export const GET: APIRoute = async ({ request, url }) => {
   if (!(await isAdminRequest(request))) return json({ error: 'Unauthorized' }, 401);
+  await ensureGivingTable();
   const studentId = String(url.searchParams.get('studentId') ?? '').trim();
   const rows = studentId
     ? await env.DB.prepare(`SELECT g.*,s.name,s.email FROM giving_transactions g JOIN students s ON s.id=g.student_id WHERE g.student_id=? ORDER BY g.occurred_at DESC`).bind(studentId).all<any>()
@@ -15,6 +36,7 @@ export const GET: APIRoute = async ({ request, url }) => {
 
 export const POST: APIRoute = async ({ request }) => {
   if (!(await isAdminRequest(request))) return json({ error: 'Unauthorized' }, 401);
+  await ensureGivingTable();
   const d = await request.json() as Record<string, any>;
   const studentId = String(d.studentId ?? '').trim();
   const amountCents = Math.round(Number(d.amount ?? 0) * 100);
