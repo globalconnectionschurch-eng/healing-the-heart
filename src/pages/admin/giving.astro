@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { isAdminRequest } from '../../lib/server';
+if (!(await isAdminRequest(Astro.request))) return Astro.redirect('/admin-login');
+---
+<BaseLayout title="Giving | Healing the Heart Admin">
+  <main class="giving-admin">
+    <header class="head"><div><p class="eyebrow">Finance & care records</p><h1>Giving</h1><p>Record church-terminal, cash, e-transfer, and other Healing the Heart gifts.</p></div><a class="button outline" href="/admin">← Dashboard</a></header>
+    <section class="panel">
+      <h2>Record a transaction</h2>
+      <form id="form">
+        <label>Attendee<select name="studentId" id="student" required><option value="">Loading people…</option></select></label>
+        <div class="grid"><label>Amount (CAD)<input name="amount" type="number" min="0.01" step="0.01" required /></label><label>Date and time<input name="occurredAt" type="datetime-local" required /></label></div>
+        <div class="grid"><label>Source<select name="source"><option value="terminal">Moneris Go terminal</option><option value="cash">Cash</option><option value="other">Other</option><option value="online">Online</option></select></label><label>Method<select name="method"><option value="debit">Debit</option><option value="credit_card">Credit card</option><option value="cash">Cash</option><option value="etransfer">E-transfer</option><option value="other">Other</option></select></label></div>
+        <div class="grid"><label>Purpose<select name="purpose"><option value="ministry_support">Ministry support</option><option value="program_payment">Program payment</option><option value="resource">Resource</option><option value="other">Other</option></select></label><label>Transaction ID<input name="transactionId" placeholder="Optional terminal/processor ID" /></label></div>
+        <label>External reference<input name="externalReference" placeholder="Optional receipt or reference number" /></label>
+        <label>Notes<textarea name="notes" rows="3"></textarea></label>
+        <button class="button primary" type="submit">Save transaction</button><p id="result" role="status"></p>
+      </form>
+    </section>
+    <section class="panel"><h2>Recent giving transactions</h2><div id="rows">Loading…</div></section>
+  </main>
+  <script is:inline>
+    const form=document.querySelector('#form'),student=document.querySelector('#student'),rows=document.querySelector('#rows'),result=document.querySelector('#result');
+    const money=c=>`$${(Number(c||0)/100).toFixed(2)}`;
+    async function load(){const a=await fetch('/api/admin/attendees');const d=await a.json();student.innerHTML='<option value="">Choose attendee…</option>'+(d.students||[]).map(s=>`<option value="${s.id}">${String(s.name).replace(/[<>]/g,'')} — ${String(s.email).replace(/[<>]/g,'')}</option>`).join('');const r=await fetch('/api/admin/giving');const g=await r.json();rows.innerHTML=(g.transactions||[]).map(t=>`<div class="row"><strong>${t.name}</strong><span>${money(t.amount_cents)} · ${t.method} · ${t.source}</span><small>${String(t.occurred_at).replace('T',' ').slice(0,16)} · ${t.status}${t.transaction_id?' · '+t.transaction_id:''}</small></div>`).join('')||'<p>No transactions yet.</p>';}
+    form.addEventListener('submit',async e=>{e.preventDefault();result.textContent='Saving…';const d=Object.fromEntries(new FormData(form));const r=await fetch('/api/admin/giving',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)});const x=await r.json();if(r.ok){result.textContent='Saved.';form.reset();await load()}else result.textContent=x.error||'Unable to save.'});
+    const dt=form.elements.occurredAt;dt.value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);load();
+  </script>
+  <style>
+    .giving-admin{max-width:1050px;margin:0 auto;padding:3rem 1rem}.head{display:flex;justify-content:space-between;gap:1rem;align-items:start;margin-bottom:2rem}.panel{padding:2rem;border:1px solid var(--line,#ddd);border-radius:24px;background:#fff;box-shadow:0 15px 45px rgba(0,0,0,.05);margin-bottom:1.5rem}.panel h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}label{display:grid;gap:.35rem;margin:1rem 0;font-weight:600}input,select,textarea{font:inherit;padding:.75rem;border:1px solid #ccd1cb;border-radius:10px} .row{display:grid;gap:.2rem;padding:1rem 0;border-bottom:1px solid #e5e8e3}.row span,.row small{color:#68706a}.row small{font-size:.85rem}@media(max-width:700px){.head,.grid{grid-template-columns:1fr;display:grid}.panel{padding:1.2rem}}
+  </style>
+</BaseLayout>
