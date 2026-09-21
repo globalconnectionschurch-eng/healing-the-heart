@@ -5,13 +5,14 @@ if (!(await isAdminRequest(Astro.request))) return Astro.redirect('/admin-login'
 ---
 <BaseLayout title="Admin | Healing the Heart">
   <section class="admin-shell">
-    <div class="admin-header"><div><p class="eyebrow">Healing the Heart</p><h1>Admin dashboard</h1><p>A simple home base for managing classes, registrations, people, and communication.</p></div><div class="actions"><a class="button outline" href="/">View website</a><button class="button outline" id="logout">Sign out</button></div></div>
-    <nav class="admin-menu" aria-label="Admin menu"><a href="/admin" aria-current="page">Dashboard</a><a href="/admin/classes">Classes</a><a href="/admin/registrations">Registrations</a><a href="/admin/attendees">Attendee Directory</a><a href="/admin/blast-email">Blast Email</a><a href="/admin/templates">Email Templates</a><a href="/admin/email-history">Email History</a></nav>
+    <div class="admin-header"><div><p class="eyebrow">Healing the Heart</p><h1>Admin dashboard</h1><p>A simple home base for managing classes, registrations, people, giving, and communication.</p></div><div class="actions"><a class="button outline" href="/">View website</a><button class="button outline" id="logout">Sign out</button></div></div>
+    <nav class="admin-menu" aria-label="Admin menu"><a href="/admin" aria-current="page">Dashboard</a><a href="/admin/classes">Classes</a><a href="/admin/registrations">Registrations</a><a href="/admin/attendees">Attendee Directory</a><a href="/admin/giving">Giving</a><a href="/admin/blast-email">Blast Email</a><a href="/admin/templates">Email Templates</a><a href="/admin/email-history">Email History</a></nav>
     <div class="admin-welcome"><div><p class="eyebrow">Welcome back</p><h2>What would you like to manage?</h2><p>Each area now has its own workspace so the dashboard stays focused and uncluttered.</p></div></div>
     <div class="admin-actions clean-actions">
       <a class="admin-action" href="/admin/classes"><span>＋</span><div><strong>Classes</strong><small>Create classes, manage dates and prices, and access private rosters.</small></div><b>→</b></a>
       <a class="admin-action" href="/admin/registrations"><span>◉</span><div><strong>Registrations</strong><small>View class registrations, add students, batch import, and send class emails.</small></div><b>→</b></a>
       <a class="admin-action" href="/admin/attendees"><span>◎</span><div><strong>Attendee Directory</strong><small>Manage the permanent student directory and individual profiles.</small></div><b>→</b></a>
+      <a class="admin-action" href="/admin/giving"><span>♥</span><div><strong>Giving</strong><small>Record terminal and other gifts, track transaction details, and connect gifts to people.</small></div><b>→</b></a>
       <a class="admin-action" href="/admin/blast-email"><span>✉</span><div><strong>Blast Email</strong><small>Send a message to students who have opted into mass email.</small></div><b>→</b></a>
       <a class="admin-action" href="/admin/templates"><span>✎</span><div><strong>Email Templates</strong><small>Edit saved messages or create new reusable templates.</small></div><b>→</b></a>
       <a class="admin-action" href="/admin/email-history"><span>↗</span><div><strong>Email History</strong><small>Review previous messages and delivery status.</small></div><b>→</b></a>
