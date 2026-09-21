@@ -21,8 +21,8 @@
     "SITE_URL": "https://healingtheheart.ca",
     "FROM_EMAIL": "Healing the Heart <healingtheheart.ca@gmail.com>",
     "CONTACT_EMAIL": "healingtheheart.ca@gmail.com",
-    "MONERIS_STORE_ID": "store1",
-    "MONERIS_CHECKOUT_ID": "chkt6TAH6tore1",
-    "MONERIS_ENV": "qa"
+    "MONERIS_STORE_ID": "mogo031434",
+    "MONERIS_CHECKOUT_ID": "chktKTUYE31434",
+    "MONERIS_ENV": "production"
   }
 }
