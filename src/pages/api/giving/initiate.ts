@@ -25,8 +25,10 @@ export const POST: APIRoute = async ({ request }) => {
       await env.DB.prepare('UPDATE students SET name=?,phone=? WHERE id=?').bind(name, phone, studentId).run();
     }
 
+    const id = crypto.randomUUID();
     const transactionId = `GIVE-${Date.now()}-${crypto.randomUUID().slice(0,8)}`;
-    await env.DB.prepare(`INSERT INTO giving_transactions (student_id,source,method,purpose,amount_cents,currency,transaction_id,status,occurred_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(studentId,'online','credit_card',purpose,amountCents,'CAD',transactionId,'pending',nowIso(),nowIso(),nowIso()).run();
+    const now = nowIso();
+    await env.DB.prepare(`INSERT INTO giving_transactions (id,student_id,source,method,purpose,amount_cents,currency,transaction_id,status,occurred_at,created_by,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(id,studentId,'online','credit_card',purpose,amountCents,'CAD',transactionId,'pending',now,'public_giving',now,now).run();
 
     const storeId = String(env.MONERIS_STORE_ID ?? '').trim();
     const apiToken = String(env.MONERIS_API_TOKEN ?? '').trim();
@@ -41,7 +43,7 @@ export const POST: APIRoute = async ({ request }) => {
     let data:any; try { data=JSON.parse(raw); } catch { data={raw:raw.slice(0,1000)}; }
     const ticket=String(data?.ticket ?? data?.response?.ticket ?? '').trim();
     if (!response.ok || !ticket) return json({error:'The payment service could not start. Please try again.'},502);
-    await env.DB.prepare('UPDATE giving_transactions SET external_reference=?,updated_at=? WHERE transaction_id=?').bind(JSON.stringify({orderNo,ticket}),nowIso(),transactionId).run();
+    await env.DB.prepare('UPDATE giving_transactions SET external_reference=?,updated_at=? WHERE transaction_id=?').bind(JSON.stringify({orderNo,ticket}),now,transactionId).run();
     return json({ok:true,ticket,environment,amount:(amountCents/100).toFixed(2),transactionId});
   } catch (error) { return json({error:error instanceof Error ? error.message : 'Unable to start giving.'},500); }
 };
