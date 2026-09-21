@@ -21,7 +21,8 @@ export const POST: APIRoute = async ({ request }) => {
     const storeId = String(env.MONERIS_STORE_ID ?? '').trim();
     const apiToken = String(env.MONERIS_API_TOKEN ?? '').trim();
     const checkoutId = String(env.MONERIS_CHECKOUT_ID ?? '').trim();
-    const environment = String(env.MONERIS_ENV ?? 'qa').trim() === 'prod' ? 'prod' : 'qa';
+    const configuredEnvironment = String(env.MONERIS_ENV ?? 'qa').trim().toLowerCase();
+    const environment = configuredEnvironment === 'prod' || configuredEnvironment === 'production' ? 'prod' : 'qa';
     if (!storeId || !apiToken || !checkoutId) return json({ error: 'Moneris payment is not configured yet.' }, 503);
 
     const orderNo = `HTH${Date.now()}${crypto.randomUUID().slice(0, 8)}`;
