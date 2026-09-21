@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Give | Healing the Heart" description="Make a direct gift to Healing the Heart.">
+  <section class="page-hero"><div class="page-hero-inner"><p class="eyebrow">Give directly</p><h1>Make a Gift</h1><p>Support Healing the Heart without selecting a class or program.</p></div></section>
+  <section class="section giving-section"><div class="giving-card">
+    <div id="form-view"><p class="lead">Your gift helps us create a safe, welcoming place for healing and restoration.</p>
+      <form id="giving-form">
+        <label>Full name<input name="name" required autocomplete="name" /></label>
+        <label>Email<input name="email" type="email" required autocomplete="email" /></label>
+        <label>Phone<input name="phone" type="tel" required autocomplete="tel" /></label>
+        <label>Gift amount (CAD)<input name="amount" type="number" min="1" step="0.01" required /></label>
+        <label>Purpose<select name="purpose"><option>Ministry support</option><option>Program support</option><option>General donation</option></select></label>
+        <button class="button primary" type="submit">Continue to secure payment</button>
+      </form>
+    </div>
+    <div id="checkout-view" hidden><p class="eyebrow">Secure payment</p><h2 id="gift-amount"></h2><div id="monerisCheckout"></div></div>
+    <div id="success" hidden><h2>Thank you for your gift.</h2><p>Your payment was received. Thank you for supporting Healing the Heart.</p><a class="button primary" href="/">Return home</a></div>
+    <div id="error" class="error" hidden></div>
+  </div></section>
+  <style>.giving-section{padding-top:3rem;padding-bottom:5rem}.giving-card{max-width:650px;margin:0 auto;padding:2rem;border:1px solid var(--line,#ddd);border-radius:24px;background:var(--surface,#fff);box-shadow:0 16px 50px rgba(0,0,0,.06)}form{display:grid;gap:1rem}label{display:grid;gap:.4rem;font-weight:600}input,select{font:inherit;padding:.8rem 1rem;border:1px solid var(--line,#ccc);border-radius:10px}button{border:0;cursor:pointer}.error{color:#8a2525;margin-top:1rem}</style>
+  <script is:inline>
+    const form=document.querySelector('#giving-form');const formView=document.querySelector('#form-view');const checkoutView=document.querySelector('#checkout-view');const success=document.querySelector('#success');const errorBox=document.querySelector('#error');
+    const showError=(message)=>{errorBox.textContent=message;errorBox.hidden=false;};
+    form.addEventListener('submit',async(event)=>{event.preventDefault();errorBox.hidden=true;const body=Object.fromEntries(new FormData(form).entries());try{const response=await fetch('/api/giving/initiate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...body,amount:Number(body.amount)})});const data=await response.json();if(!response.ok)return showError(data.error||'Unable to start payment.');document.querySelector('#gift-amount').textContent=`Gift amount: $${data.amount} CAD`;const script=document.createElement('script');script.src=data.environment==='prod'?'https://gateway.moneris.com/chktv2/js/chkt_v3.00.js':'https://gatewayt.moneris.com/chktv2/js/chkt_v3.00.js';script.onload=()=>{const checkout=new window.monerisCheckout();checkout.setMode(data.environment);checkout.setCheckoutDiv('monerisCheckout');checkout.setCallback('cancel_transaction',()=>checkout.closeCheckout());checkout.setCallback('error_event',()=>showError('The payment service reported an error. Please try again.'));checkout.setCallback('payment_complete',async(raw)=>{let callback=raw;try{callback=typeof raw==='string'?JSON.parse(raw):raw;}catch{}const ticket=callback?.ticket||data.ticket;checkout.closeCheckout();const confirm=await fetch('/api/giving/complete',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({transactionId:data.transactionId,ticket})});const result=await confirm.json();if(!confirm.ok||!result.paid)return showError(result.error||'We could not confirm your gift. Please contact us.');checkoutView.hidden=true;success.hidden=false;});formView.hidden=true;checkoutView.hidden=false;checkout.startCheckout(data.ticket);};script.onerror=()=>showError('The secure payment service could not be loaded.');document.head.appendChild(script);}catch{showError('Unable to connect to the payment service. Please try again.');}});
+  </script>
+</BaseLayout>
