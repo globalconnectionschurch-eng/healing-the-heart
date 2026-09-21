@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { isAdminRequest } from '../../lib/server';
+if (!(await isAdminRequest(Astro.request))) return Astro.redirect('/admin-login');
+---
+<BaseLayout title="Giving Profiles | Healing the Heart Admin">
+  <main class="directory">
+    <header class="directory-head">
+      <div><span class="kicker">Giving</span><h1>Individual giving profiles</h1><p>Search an attendee and view their giving total and transaction history.</p></div>
+      <a class="button outline" href="/admin">← Dashboard</a>
+    </header>
+    <section class="directory-bar"><label class="search"><span>⌕</span><input id="search" placeholder="Search by name, email, or phone…" autocomplete="off" /></label></section>
+    <div id="results" class="people"><div class="loading">Loading giving profiles…</div></div>
+  </main>
+  <script is:inline>
+    const search=document.querySelector('#search');
+    const results=document.querySelector('#results');
+    let attendees=[],transactions=[];
+    const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const money=cents=>new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD'}).format((Number(cents)||0)/100);
+    const date=v=>v?new Date(v).toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'}):'—';
+    function render(){
+      const q=search.value.toLowerCase().trim();
+      const filtered=attendees.filter(a=>`${a.name||''} ${a.email||''} ${a.phone||''}`.toLowerCase().includes(q));
+      results.innerHTML=filtered.map(a=>{
+        const rows=transactions.filter(t=>String(t.student_id)===String(a.id)&&t.status==='completed');
+        const total=rows.reduce((sum,t)=>sum+Number(t.amount_cents||0),0);
+        return `<article class="person-card open"><div class="person-summary"><span class="avatar">${esc((a.name||'?').split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</span><span class="person-name"><strong>${esc(a.name||'Unnamed')}</strong><small>${esc(a.email||'No email on file')}</small></span><span class="registrations"><b>${money(total)}</b><small>Total giving</small></span><span class="arrow">⌄</span></div><div class="person-detail"><div class="profile-top"><div class="identity"><div><span class="kicker">Giving profile</span><h2>${esc(a.name||'Unnamed')}</h2><p>${esc(a.email||'')} ${a.phone?`• ${esc(a.phone)}`:''}</p></div></div><div class="profile-actions"><a class="button soft" href="/admin/giving">Add transaction</a></div></div><div class="profile-notice has-info"><div><strong>Total completed giving: ${money(total)}</strong><span>${rows.length} completed transaction${rows.length===1?'':'s'}</span></div></div><div class="data-list">${rows.length?rows.sort((x,y)=>String(y.occurred_at).localeCompare(String(x.occurred_at))).map(t=>`<div class="data-row"><span>${date(t.occurred_at)} • ${esc(t.purpose||'General giving')} • ${esc(t.method||'Other')}</span><strong>${money(t.amount_cents)}</strong></div>`).join(''):'<div class="data-row"><span>No completed giving recorded</span><strong>—</strong></div>'}</div></div></article>`;
+      }).join('')||'<div class="empty-state"><strong>No matching attendees</strong><span>Try a different name, email, or phone number.</span></div>';
+    }
+    async function load(){
+      const [a,t]=await Promise.all([fetch('/api/admin/attendees'),fetch('/api/admin/giving')]);
+      if(a.status===401||t.status===401){location='/admin-login';return}
+      attendees=(await a.json()).students||[];
+      transactions=(await t.json()).transactions||[];
+      render();
+    }
+    search.addEventListener('input',render);
+    load();
+  </script>
+</BaseLayout>
