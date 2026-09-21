@@ -56,3 +56,23 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ error: error instanceof Error ? error.message : 'Unable to record transaction.' }, 400);
   }
 };
+
+export const PATCH: APIRoute = async ({ request }) => {
+  if (!(await isAdminRequest(request))) return json({ error: 'Unauthorized' }, 401);
+  await ensureGivingTable();
+  const d = await request.json() as Record<string, any>;
+  const transactionId = String(d.transactionId ?? '').trim();
+  const studentId = String(d.studentId ?? '').trim();
+  if (!transactionId) return json({ error: 'Transaction ID is required.' }, 400);
+  const existing = await env.DB.prepare(`SELECT id,student_id,status FROM giving_transactions WHERE transaction_id=?`).bind(transactionId).first<any>();
+  if (!existing) return json({ error: 'Transaction not found.' }, 404);
+  if (studentId) {
+    const student = await env.DB.prepare('SELECT id FROM students WHERE id=?').bind(studentId).first<any>();
+    if (!student) return json({ error: 'Attendee not found.' }, 404);
+  }
+  const status = ['pending','completed','failed','refunded','voided'].includes(d.status) ? d.status : 'completed';
+  const now = nowIso();
+  const note = String(d.note ?? '').trim();
+  await env.DB.prepare(`UPDATE giving_transactions SET status=?, student_id=COALESCE(?,student_id), notes=CASE WHEN ?='' THEN notes WHEN notes IS NULL OR notes='' THEN ? ELSE notes || '\n' || ? END, updated_at=? WHERE transaction_id=?`).bind(status, studentId || null, note, note, note, now, transactionId).run();
+  return json({ ok: true, transactionId, status });
+};
