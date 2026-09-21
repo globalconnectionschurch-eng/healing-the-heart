@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Give | Healing the Heart" description="Support Healing the Heart through program payments or a gift to the ministry.">
+  <section class="page-hero give-hero">
+    <div class="page-hero-inner">
+      <p class="eyebrow">Support the ministry</p>
+      <h1>Support Healing the Heart</h1>
+      <p>Help create a safe, welcoming place where people can move toward healing, freedom, and wholeness.</p>
+    </div>
+  </section>
+
+  <section class="section give-section">
+    <div class="give-intro">
+      <p class="lead">Healing the Heart exists to provide a safe and welcoming place where people can work through the pain of their past, experience emotional healing, and begin walking in greater freedom and wholeness.</p>
+      <p>Whether you are making a payment for a Healing the Heart program or simply want to support the ministry, you can use the options below.</p>
+    </div>
+
+    <div class="give-grid">
+      <article class="give-card">
+        <div class="give-card-icon">↗</div>
+        <p class="eyebrow">Program payment</p>
+        <h2>Make a Payment</h2>
+        <p>Submit payment for a program, course, retreat, book, or other Healing the Heart resource.</p>
+        <a class="button primary" href="/register">Make a Program Payment</a>
+      </article>
+
+      <article class="give-card featured">
+        <div class="give-card-icon">♥</div>
+        <p class="eyebrow">Support the ministry</p>
+        <h2>Give to the Ministry</h2>
+        <p>Your donation helps us provide counseling, emotional wellness teaching, practical support, and opportunities for healing to individuals and families in need.</p>
+        <p>Every gift—large or small—helps Healing the Heart continue reaching people with hope, care, and restoration. We are deeply grateful for your support and could not do this work without you.</p>
+        <a class="button primary" href="/contact?topic=giving">Ask About Giving</a>
+      </article>
+    </div>
+
+    <div class="charity-note">
+      <p class="eyebrow">Registered charity</p>
+      <p><strong>Canadian Registered Charity Number:</strong> 804904464RR0001</p>
+    </div>
+  </section>
+
+  <style>
+    .give-section { padding-top: 3.5rem; padding-bottom: 5rem; }
+    .give-intro { max-width: 780px; margin: 0 auto 2.5rem; text-align: center; }
+    .give-intro .lead { font-size: 1.25rem; line-height: 1.8; }
+    .give-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; max-width: 1040px; margin: 0 auto; }
+    .give-card { padding: 2.25rem; border: 1px solid var(--line, #ddd); border-radius: 26px; background: var(--surface, #fff); box-shadow: 0 18px 55px rgba(0,0,0,.06); }
+    .give-card.featured { background: linear-gradient(145deg, rgba(119,54,35,.08), rgba(210,137,75,.13)); border-color: rgba(151,93,54,.3); }
+    .give-card-icon { display: grid; place-items: center; width: 3rem; height: 3rem; margin-bottom: 1.25rem; border-radius: 50%; background: rgba(151,93,54,.13); color: #87512f; font-size: 1.35rem; }
+    .give-card h2 { margin: .25rem 0 .9rem; }
+    .give-card p { line-height: 1.75; }
+    .give-card .button { margin-top: 1rem; }
+    .charity-note { max-width: 1040px; margin: 2rem auto 0; padding: 1.5rem 2rem; border-radius: 18px; background: rgba(0,0,0,.035); text-align: center; }
+    .charity-note p { margin: .25rem 0; }
+    @media (max-width: 760px) { .give-grid { grid-template-columns: 1fr; } .give-card { padding: 1.5rem; } .give-intro .lead { font-size: 1.1rem; } }
+  </style>
+</BaseLayout>
