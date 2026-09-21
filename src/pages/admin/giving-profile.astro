@@ -38,4 +38,12 @@ if (!(await isAdminRequest(Astro.request))) return Astro.redirect('/admin-login'
     search.addEventListener('input',render);
     load();
   </script>
+  <style>
+    .directory-bar{display:flex;align-items:center;margin:1.25rem 0 1.5rem;padding:0;background:transparent}
+    .search{display:flex!important;align-items:center;gap:.55rem;width:min(100%,360px);height:40px!important;margin:0!important;padding:0 .8rem!important;border:1px solid #d8ddd7!important;border-radius:999px!important;background:#fff;box-shadow:0 4px 14px rgba(38,48,40,.05)}
+    .search span{color:#7a837b;font-size:1.05rem;line-height:1}
+    .search input{width:100%;min-width:0;height:100%;padding:0!important;border:0!important;outline:0!important;background:transparent!important;box-shadow:none!important;font:inherit;font-size:.85rem!important;color:#273128}
+    .search input::placeholder{color:#929a93;opacity:1}
+    .search:focus-within{border-color:#b8c6b9!important;box-shadow:0 0 0 3px rgba(83,112,87,.1)}
+  </style>
 </BaseLayout>
