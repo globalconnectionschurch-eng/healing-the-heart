@@ -44,7 +44,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const now = new Date().toISOString();
-  const verificationCode = text(form, 'verificationCode') || existingRegistration?.verification_code || null;
+  const verificationCode = text(form, 'verificationCode').toUpperCase() || existingRegistration?.verification_code || null;
   const currentCrisis = crisisChoices(form);
   const profile = [
     text(form,'phone'), text(form,'address'), text(form,'dateOfBirth'), text(form,'maritalStatus'), text(form,'church'), text(form,'srPastor'),
@@ -59,8 +59,21 @@ export const POST: APIRoute = async ({ request }) => {
     await env.DB.prepare(`UPDATE students SET name=?,phone=?,address=?,date_of_birth=?,marital_status=?,church=?,sr_pastor=?,how_heard=?,goals=?,smoking_drinking=?,anything_else=?,diagnosis=?,learning_restrictions=?,adopted=?,major_trauma=?,grief=?,in_ministry=?,dietary_restrictions=?,current_crisis=?,self_harm_history=?,updated_at=? WHERE id=?`).bind(name,...profile,now,actualStudentId).run();
   }
 
-  const isPrepaid = Boolean(verificationCode);
+  let validDiscount = false;
+  if (verificationCode) {
+    const discount = await env.DB.prepare(`SELECT id FROM discounts
+      WHERE upper(code)=? AND (student_id IS NULL OR student_id=?) AND active=1
+        AND (starts_at IS NULL OR starts_at<=?)
+        AND (expires_at IS NULL OR expires_at>=?)
+        AND (class_id IS NULL OR class_id=?)
+        AND (max_uses IS NULL OR used_count<max_uses)
+      LIMIT 1`).bind(verificationCode, actualStudentId, now, now, classId).first<{id:string}>();
+    if (discount) validDiscount = true;
+    else return new Response(JSON.stringify({ ok: false, error: 'That discount or verification code is not valid.' }), { status: 400, headers: { 'content-type': 'application/json; charset=utf-8' } });
+  }
+
   const isFree = Number(classRow.price_cents || 0) <= 0;
+  const isPrepaid = Boolean(verificationCode) && !validDiscount;
   const paymentStatus = isPrepaid || isFree ? 'paid' : 'pending';
   const registrationStatus = isPrepaid || isFree ? 'registered' : 'pending_payment';
   let registrationId = existingRegistration?.id as string | undefined;
