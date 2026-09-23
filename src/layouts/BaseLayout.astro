@@ -17,6 +17,7 @@ const isAdmin = Astro.url.pathname.startsWith('/admin') || Astro.url.pathname ==
     <link rel="stylesheet" href="/admin-batch-import.css" />
     <link rel="stylesheet" href="/admin-attendee-tools.css" />
     <link rel="stylesheet" href="/home-hero-nav.css" />
+    <link rel="stylesheet" href="/register-flow-fixes.css" />
   </head>
   <body class:list={{ 'admin-page': isAdmin }}>
     <header class:list={['site-header', { 'home-header': isHome }]}>
