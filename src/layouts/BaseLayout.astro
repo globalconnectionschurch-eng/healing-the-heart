@@ -30,5 +30,17 @@ const isAdmin = Astro.url.pathname.startsWith('/admin') || Astro.url.pathname ==
     <script src="/admin-settings.js" is:inline></script>
     <script src="/admin-batch-import.js?v=20260916-2" is:inline></script>
     <script src="/admin-attendee-tools.js?v=20260916-1" is:inline></script>
+    <script is:inline>
+      if (location.pathname === '/register') {
+        const codeInput = document.querySelector('input[name="verificationCode"]');
+        const codeLabel = codeInput?.closest('label');
+        if (codeLabel) {
+          codeLabel.childNodes[0].textContent = 'Class access or discount code ';
+          const note = codeLabel.querySelector('.field-note');
+          if (note) note.textContent = 'One code for gifted, prepaid, attendee-specific, or universal access';
+          codeInput.placeholder = 'Enter your class code';
+        }
+      }
+    </script>
   </body>
 </html>
