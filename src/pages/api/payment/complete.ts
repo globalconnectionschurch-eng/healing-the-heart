@@ -21,7 +21,8 @@ export const POST: APIRoute = async ({ request }) => {
     const storeId = String(env.MONERIS_STORE_ID ?? '').trim();
     const apiToken = String(env.MONERIS_API_TOKEN ?? '').trim();
     const checkoutId = String(env.MONERIS_CHECKOUT_ID ?? '').trim();
-    const environment = String(env.MONERIS_ENV ?? 'qa').trim() === 'prod' ? 'prod' : 'qa';
+    const configuredEnvironment = String(env.MONERIS_ENV ?? 'qa').trim().toLowerCase();
+    const environment = configuredEnvironment === 'prod' || configuredEnvironment === 'production' ? 'prod' : 'qa';
     if (!storeId || !apiToken || !checkoutId) return json({ error: 'Moneris payment is not configured yet.' }, 503);
 
     const endpoint = environment === 'prod'
@@ -45,7 +46,10 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ ok: false, error: 'Moneris did not approve the payment. Please try again or contact us.' }, 402);
     }
 
-    await env.DB.prepare(`UPDATE registrations SET payment_status='paid',status='registered',payment_transaction_id=?,paid_at=?,payment_error=NULL WHERE id=?`).bind(transactionId, now, registrationId).run();
+    const updateResult = await env.DB.prepare(`UPDATE registrations SET payment_status='paid',status='registered',payment_transaction_id=?,paid_at=?,payment_error=NULL WHERE id=? AND payment_status!='paid'`).bind(transactionId, now, registrationId).run();
+    if (Number(updateResult.meta?.changes ?? 0) > 0 && row.discount_id) {
+      await env.DB.prepare('UPDATE discounts SET used_count=used_count+1,updated_at=? WHERE id=? AND (max_uses IS NULL OR used_count<max_uses)').bind(now, row.discount_id).run();
+    }
 
     // Automatic post-payment emails are intentionally disabled for now.
     return json({ ok: true, paid: true, transactionId });
