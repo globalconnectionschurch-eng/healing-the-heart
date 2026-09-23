@@ -59,7 +59,6 @@ export const POST: APIRoute = async ({ request }) => {
     await env.DB.prepare(`UPDATE students SET name=?,phone=?,address=?,date_of_birth=?,marital_status=?,church=?,sr_pastor=?,how_heard=?,goals=?,smoking_drinking=?,anything_else=?,diagnosis=?,learning_restrictions=?,adopted=?,major_trauma=?,grief=?,in_ministry=?,dietary_restrictions=?,current_crisis=?,self_harm_history=?,updated_at=? WHERE id=?`).bind(name,...profile,now,actualStudentId).run();
   }
 
-  let validDiscount = false;
   if (verificationCode) {
     const discount = await env.DB.prepare(`SELECT id FROM discounts
       WHERE upper(code)=? AND (student_id IS NULL OR student_id=?) AND active=1
@@ -68,14 +67,14 @@ export const POST: APIRoute = async ({ request }) => {
         AND (class_id IS NULL OR class_id=?)
         AND (max_uses IS NULL OR used_count<max_uses)
       LIMIT 1`).bind(verificationCode, actualStudentId, now, now, classId).first<{id:string}>();
-    if (discount) validDiscount = true;
-    else return new Response(JSON.stringify({ ok: false, error: 'That discount or verification code is not valid.' }), { status: 400, headers: { 'content-type': 'application/json; charset=utf-8' } });
+    if (!discount) return new Response(JSON.stringify({ ok: false, error: 'That discount code is not valid for this attendee or class.' }), { status: 400, headers: { 'content-type': 'application/json; charset=utf-8' } });
   }
 
+  // A code from the unified discount system never bypasses payment automatically.
+  // The same stored code is carried into the payment page and applied there.
   const isFree = Number(classRow.price_cents || 0) <= 0;
-  const isPrepaid = Boolean(verificationCode) && !validDiscount;
-  const paymentStatus = isPrepaid || isFree ? 'paid' : 'pending';
-  const registrationStatus = isPrepaid || isFree ? 'registered' : 'pending_payment';
+  const paymentStatus = isFree ? 'paid' : 'pending';
+  const registrationStatus = isFree ? 'registered' : 'pending_payment';
   let registrationId = existingRegistration?.id as string | undefined;
   if (existingRegistration) {
     await env.DB.prepare(`UPDATE registrations SET source='online',verification_code=?,payment_status=?,status=?,registered_at=? WHERE id=?`).bind(verificationCode, paymentStatus, registrationStatus, now, registrationId).run();
@@ -84,8 +83,7 @@ export const POST: APIRoute = async ({ request }) => {
     await env.DB.prepare(`INSERT INTO registrations (id,class_id,student_id,source,verification_code,payment_status,status,registered_at) VALUES (?,?,?,?,?,?,?,?)`).bind(registrationId,classId,actualStudentId,'online',verificationCode,paymentStatus,registrationStatus,now).run();
   }
 
-  // Automatic emails are intentionally disabled for now. Registration remains fully functional;
-  // the confirmation email flow can be re-enabled later as a deliberate configuration change.
+  // Automatic emails are intentionally disabled for now.
   if (paymentStatus === 'paid') return new Response(null,{status:303,headers:{location:'/register?success=1'}});
   return new Response(null,{status:303,headers:{location:`/payment?registration=${encodeURIComponent(registrationId!)}`}});
 };
