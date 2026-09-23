@@ -29,7 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
       const now = new Date().toISOString();
       const discount = await env.DB.prepare(`SELECT id,percent_off,max_uses,used_count
         FROM discounts
-        WHERE upper(code)=? AND student_id=? AND active=1
+        WHERE upper(code)=? AND (student_id IS NULL OR student_id=?) AND active=1
           AND (starts_at IS NULL OR starts_at<=?)
           AND (expires_at IS NULL OR expires_at>=?)
           AND (class_id IS NULL OR class_id=?)
