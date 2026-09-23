@@ -1,0 +1,1 @@
+.form-actions:has(#submit-button:not([hidden])) #next-button{display:none!important}.form-actions #next-button[hidden],.form-actions #submit-button[hidden]{display:none!important}
