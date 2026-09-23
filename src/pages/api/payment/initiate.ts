@@ -8,10 +8,9 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json() as { registrationId?: string; discountCode?: string };
     const registrationId = String(body.registrationId ?? '').trim();
-    const discountCode = String(body.discountCode ?? '').trim().toUpperCase();
     if (!registrationId) return json({ error: 'Registration is required.' }, 400);
 
-    const row = await env.DB.prepare(`SELECT r.id,r.class_id,r.student_id,r.payment_status,r.source,c.price_cents,c.title,s.name,s.email
+    const row = await env.DB.prepare(`SELECT r.id,r.class_id,r.student_id,r.payment_status,r.source,r.verification_code,c.price_cents,c.title,s.name,s.email
       FROM registrations r JOIN classes c ON c.id=r.class_id JOIN students s ON s.id=r.student_id WHERE r.id=?`).bind(registrationId).first<any>();
     if (!row) return json({ error: 'Registration not found.' }, 404);
     if (row.payment_status === 'paid') return json({ ok: true, alreadyPaid: true });
@@ -20,6 +19,9 @@ export const POST: APIRoute = async ({ request }) => {
     const originalAmountCents = Number(row.price_cents || 0);
     if (originalAmountCents <= 0) return json({ error: 'This class does not have an online payment amount.' }, 400);
 
+    // The registration page is the only place where a code is entered.
+    // The stored registration code is automatically applied here.
+    const discountCode = String(body.discountCode ?? row.verification_code ?? '').trim().toUpperCase();
     let finalAmountCents = originalAmountCents;
     let discountId: string | null = null;
     let discountPercent = 0;
@@ -43,7 +45,6 @@ export const POST: APIRoute = async ({ request }) => {
       await env.DB.prepare(`UPDATE registrations SET discount_id=?,discount_percent=?,original_amount_cents=?,discount_amount_cents=?,final_amount_cents=? WHERE id=?`).bind(
         discountId, discountPercent, originalAmountCents, discountAmountCents, finalAmountCents, registrationId
       ).run();
-      await env.DB.prepare('UPDATE discounts SET used_count=used_count+1,updated_at=? WHERE id=?').bind(now, discountId).run();
     } else {
       await env.DB.prepare(`UPDATE registrations SET discount_id=NULL,discount_percent=0,original_amount_cents=?,discount_amount_cents=0,final_amount_cents=? WHERE id=?`).bind(
         originalAmountCents, originalAmountCents, registrationId
@@ -51,7 +52,8 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     if (finalAmountCents <= 0) {
-      await env.DB.prepare(`UPDATE registrations SET payment_status='paid',status='registered' WHERE id=?`).bind(registrationId).run();
+      await env.DB.prepare(`UPDATE registrations SET payment_status='paid',status='registered' WHERE id=? AND payment_status!='paid'`).bind(registrationId).run();
+      if (discountId) await env.DB.prepare('UPDATE discounts SET used_count=used_count+1,updated_at=? WHERE id=? AND (max_uses IS NULL OR used_count<max_uses)').bind(new Date().toISOString(), discountId).run();
       return json({ ok: true, alreadyPaid: true, discounted: true, amount: '0.00' });
     }
 
