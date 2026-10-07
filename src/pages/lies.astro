@@ -148,7 +148,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <div class="feelings-intro">
           <p class="eyebrow">Feelings Wheel</p>
           <h1>Put language to what you feel.</h1>
-          <p>Hover over or tap a feeling to see a short definition. Start broad near the centre and move outward until a word feels closer to what is happening inside.</p>
+          <p>Hover over or tap a feeling to see a short definition. On mobile, tap a section to zoom in so the more specific feelings are easier to read.</p>
         </div>
         <div class="wheel-card">
           <div id="feeling-panel" class="feeling-panel">
@@ -479,10 +479,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .email-status{grid-column:1/-1;margin:0;padding:.75rem .9rem;border-radius:10px;background:#edf1ed;color:#445a50}
     .disclaimer{margin:1.2rem auto 0;text-align:center;color:#7c756e;font-size:.75rem}
     .feelings-intro{max-width:800px;margin-bottom:1.5rem}
-    .wheel-card{position:relative;padding:1rem;background:#fff;box-shadow:0 22px 60px rgba(62,43,27,.08)}
+    .wheel-card{position:relative;padding:1rem;background:#fff;box-shadow:0 22px 60px rgba(62,43,27,.08);overflow:hidden}
     .feeling-panel{position:absolute;top:1.4rem;left:1.4rem;z-index:2;max-width:320px;padding:.8rem 1rem;border-radius:14px;background:rgba(255,255,255,.96);box-shadow:0 8px 26px rgba(0,0,0,.13);font-size:.86rem;line-height:1.4}
     .feeling-panel strong{display:block;margin-bottom:.15rem;font-size:.95rem}.feeling-panel div{color:#66706b}
-    .wheel-canvas{position:relative;width:100%;aspect-ratio:1/1;min-height:520px;border-radius:18px;touch-action:pan-y!important}
+    .wheel-canvas{position:relative;width:100%;aspect-ratio:1/1;min-height:0;border-radius:18px;touch-action:pan-y!important}
     .wheel-canvas .highcharts-container{touch-action:pan-y!important}
     .wheel-next{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:1rem;padding:1rem 1.2rem;border-radius:16px;background:#efe5d7}
     .wheel-next span{font-weight:800}
@@ -499,8 +499,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       .result-card{grid-template-columns:1fr}.result-number{width:42px;height:42px}
       .lie-list,.resource-columns{grid-template-columns:1fr}
       .email-controls{flex-direction:column}.email-controls .button{width:100%}
-      .feeling-panel{position:static;max-width:none;margin-bottom:.6rem;box-shadow:none;background:#f6f2eb}
-      .wheel-canvas{min-height:620px}
+      .feeling-panel{position:static;max-width:none;margin-bottom:.7rem;padding:.85rem 1rem;box-shadow:none;background:#f6f2eb}
+      .wheel-card{padding:.75rem}
+      .wheel-canvas{min-height:0;aspect-ratio:1/1}
       .wheel-next{align-items:stretch;flex-direction:column}
     }
     @media(max-width:479px){
@@ -511,7 +512,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       .tool-intro{padding:1.4rem}
       .input-card{margin:-.5rem .25rem 0}
       .tools-panel{padding-left:4.5vw;padding-right:4.5vw}
-      .wheel-canvas{min-height:700px}
+      .wheel-canvas{min-height:0;aspect-ratio:1/1}
       .input-footer{flex-direction:column;gap:.2rem}
       .tool-actions .button{flex:1}
     }
