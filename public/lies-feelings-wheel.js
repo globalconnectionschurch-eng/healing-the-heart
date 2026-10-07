@@ -162,6 +162,164 @@
   };
 
   let wheelChart = null;
+  let mobilePath = [];
+
+  const coreColors = {
+    Happy: '#12d98a',
+    Sad: '#f4df00',
+    Angry: '#ff6b35',
+    Fearful: '#6b8fc2',
+    Bad: '#c65ee9',
+    Surprised: '#38d0c3',
+    Disgusted: '#ff5147'
+  };
+
+  function childrenOf(parent) {
+    return wheelData.filter((item) => item.parent === parent);
+  }
+
+  function descriptionFor(name) {
+    return feelingDescriptions[name] || 'Notice whether this word feels close to what is happening inside.';
+  }
+
+  function coreFor(name) {
+    let current = wheelData.find((item) => item.id === name || item.name === name);
+    let guard = 0;
+    while (current && current.parent && current.parent !== 'root' && guard < 10) {
+      current = wheelData.find((item) => item.id === current.parent || item.name === current.parent);
+      guard += 1;
+    }
+    return current && current.parent === 'root' ? current.name : name;
+  }
+
+  function useFeeling(name) {
+    const tab = document.querySelector('[data-tab="tool"]');
+    if (tab) tab.click();
+
+    setTimeout(() => {
+      const input = document.getElementById('mainText');
+      if (!input) return;
+      if (!input.value.trim()) {
+        input.value = "I'm feeling " + name.toLowerCase() + " because ";
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      input.focus();
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 180);
+  }
+
+  function renderFinalFeeling(name) {
+    const picker = document.getElementById('mobile-feelings-picker');
+    if (!picker) return;
+    const color = coreColors[coreFor(name)] || '#d66b32';
+    const trail = mobilePath.concat(name).filter((item, index, arr) => arr.indexOf(item) === index);
+
+    picker.innerHTML =
+      '<div class="mobile-picker-shell">' +
+        '<div class="mobile-feeling-result" style="--feeling-color:' + color + '">' +
+          '<p class="mobile-picker-kicker">This feels closest</p>' +
+          '<h3>' + name + '</h3>' +
+          '<p>' + descriptionFor(name) + '</p>' +
+          '<div class="mobile-picker-trail" style="margin-top:1rem">' +
+            trail.map((item) => '<span>' + item + '</span>').join('') +
+          '</div>' +
+          '<div class="mobile-result-actions">' +
+            '<button type="button" class="button primary" data-use-feeling="' + name + '">Use this feeling in the healing tool →</button>' +
+            '<button type="button" class="mobile-reset-button" data-reset-feelings>Choose another feeling</button>' +
+          '</div>' +
+        '</div>' +
+        '<p class="mobile-picker-note">You do not have to get the word perfectly right. Choose the one that feels closest.</p>' +
+      '</div>';
+
+    picker.querySelector('[data-use-feeling]')?.addEventListener('click', () => useFeeling(name));
+    picker.querySelector('[data-reset-feelings]')?.addEventListener('click', () => {
+      mobilePath = [];
+      renderMobilePicker();
+    });
+  }
+
+  function renderMobilePicker() {
+    const picker = document.getElementById('mobile-feelings-picker');
+    if (!picker) return;
+
+    const step = mobilePath.length + 1;
+    let options = [];
+    let title = '';
+    let help = '';
+
+    if (step === 1) {
+      options = childrenOf('root');
+      title = 'What feels closest right now?';
+      help = "Don't overthink it. Start with the broad feeling that is nearest to what you feel.";
+    } else if (step === 2) {
+      options = childrenOf(mobilePath[0]);
+      title = 'What kind of ' + mobilePath[0].toLowerCase() + '?';
+      help = 'Pick the word that feels closest. We can make it more specific next.';
+    } else {
+      options = childrenOf(mobilePath[1]);
+      title = 'Which word fits best?';
+      help = 'You can choose the middle feeling itself, or one of the more specific words below.';
+    }
+
+    const progress =
+      '<div class="mobile-picker-progress">' +
+        [1, 2, 3].map((n) => '<span class="' + (n <= step ? 'active' : '') + '"></span>').join('') +
+      '</div>';
+
+    const trail = mobilePath.length
+      ? '<div class="mobile-picker-trail">' + mobilePath.map((item) => '<span>' + item + '</span>').join('') + '</div>'
+      : '';
+
+    const color = coreColors[mobilePath[0]] || '#d66b32';
+
+    let optionItems = options.slice();
+    if (step === 3 && mobilePath[1]) {
+      optionItems = [{ name: mobilePath[1], keepCurrent: true }].concat(optionItems);
+    }
+
+    const cards = optionItems.map((item) => {
+      const name = item.name;
+      const itemColor = coreColors[coreFor(name)] || color;
+      const label = item.keepCurrent ? 'This word fits already' : descriptionFor(name);
+      return '<button type="button" class="mobile-feeling-choice" data-feeling-choice="' + name + '" data-keep-current="' + (item.keepCurrent ? '1' : '0') + '" style="--feeling-color:' + itemColor + '">' +
+        '<strong>' + name + '</strong>' +
+        '<small>' + label + '</small>' +
+      '</button>';
+    }).join('');
+
+    picker.innerHTML =
+      '<div class="mobile-picker-shell">' +
+        progress +
+        '<p class="mobile-picker-kicker">Step ' + step + ' of 3</p>' +
+        '<h2 class="mobile-picker-title">' + title + '</h2>' +
+        '<p class="mobile-picker-help">' + help + '</p>' +
+        trail +
+        '<div class="mobile-feeling-grid">' + cards + '</div>' +
+        (step > 1 ? '<button type="button" class="mobile-picker-back" data-feeling-back>← Back one step</button>' : '') +
+        '<p class="mobile-picker-note">Start broad and move toward the word that feels most accurate.</p>' +
+      '</div>';
+
+    picker.querySelectorAll('[data-feeling-choice]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const name = button.getAttribute('data-feeling-choice');
+        const keepCurrent = button.getAttribute('data-keep-current') === '1';
+        if (!name) return;
+
+        if (step === 3 || keepCurrent) {
+          renderFinalFeeling(name);
+          return;
+        }
+
+        mobilePath.push(name);
+        renderMobilePicker();
+      });
+    });
+
+    picker.querySelector('[data-feeling-back]')?.addEventListener('click', () => {
+      mobilePath.pop();
+      renderMobilePicker();
+    });
+  }
 
   function updatePanel(point) {
     const panel = document.getElementById('feeling-panel');
@@ -176,37 +334,32 @@
   }
 
   window.initHthFeelingsWheel = function initHthFeelingsWheel() {
+    const isMobile = window.matchMedia('(max-width: 800px)').matches;
+    if (isMobile) {
+      renderMobilePicker();
+      return null;
+    }
+
     if (wheelChart) {
       setTimeout(() => wheelChart.reflow(), 30);
       return wheelChart;
     }
+
     const target = document.getElementById('feelings-wheel');
     if (!target || !window.Highcharts) return null;
 
-    const isMobile = window.matchMedia('(max-width: 767px)').matches;
-    const chartHeight = isMobile
-      ? Math.max(300, Math.round(target.getBoundingClientRect().width))
-      : '100%';
-
     wheelChart = window.Highcharts.chart('feelings-wheel', {
       chart: {
-        height: chartHeight,
+        height: '100%',
         backgroundColor: 'transparent',
-        spacing: isMobile ? [4, 4, 4, 4] : [10, 10, 10, 10]
+        spacing: [10, 10, 10, 10]
       },
       title: { text: '' },
-      breadcrumbs: {
-        enabled: isMobile,
-        floating: false,
-        position: { align: 'left' },
-        buttonTheme: {
-          style: { fontSize: '11px', fontWeight: '700', color: '#4d5953' }
-        }
-      },
+      breadcrumbs: { enabled: false },
       series: [{
         type: 'sunburst',
         data: wheelData,
-        allowDrillToNode: isMobile,
+        allowDrillToNode: false,
         cursor: 'pointer',
         point: {
           events: {
@@ -216,9 +369,9 @@
         },
         dataLabels: {
           rotationMode: 'auto',
-          filter: { property: 'innerArcLength', operator: '>', value: isMobile ? 22 : 16 },
+          filter: { property: 'innerArcLength', operator: '>', value: 16 },
           style: {
-            fontSize: isMobile ? '9px' : '12px',
+            fontSize: '12px',
             fontWeight: '600',
             textOutline: 'none',
             color: '#202522'
@@ -230,7 +383,7 @@
             levelIsConstant: true,
             dataLabels: {
               style: {
-                fontSize: isMobile ? '10px' : '14px',
+                fontSize: '14px',
                 fontWeight: '800',
                 textOutline: 'none',
                 color: '#202522'
@@ -242,7 +395,7 @@
             colorByPoint: true,
             dataLabels: {
               style: {
-                fontSize: isMobile ? '10px' : '12px',
+                fontSize: '12px',
                 fontWeight: '700',
                 textOutline: 'none',
                 color: '#202522'
@@ -253,7 +406,7 @@
             level: 3,
             dataLabels: {
               style: {
-                fontSize: isMobile ? '9px' : '12px',
+                fontSize: '12px',
                 textOutline: 'none',
                 color: '#202522'
               }
@@ -263,7 +416,7 @@
             level: 4,
             dataLabels: {
               style: {
-                fontSize: isMobile ? '8px' : '12px',
+                fontSize: '12px',
                 textOutline: 'none',
                 color: '#202522'
               }
@@ -274,15 +427,6 @@
       tooltip: { enabled: false },
       credits: { enabled: false }
     });
-
-    if (isMobile) {
-      const resizeWheel = () => {
-        if (!wheelChart) return;
-        const width = target.getBoundingClientRect().width;
-        if (width > 0) wheelChart.setSize(null, Math.max(300, Math.round(width)), false);
-      };
-      window.addEventListener('resize', resizeWheel, { passive: true });
-    }
 
     return wheelChart;
   };
