@@ -151,13 +151,22 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <p>Start broad, then narrow it down. On your phone, the wheel becomes a simple guided picker so you can move from a big feeling to the exact word that fits.</p>
         </div>
         <div class="wheel-card">
-          <div id="mobile-feelings-picker" class="mobile-feelings-picker"></div>
           <div id="feeling-panel" class="feeling-panel">
             <strong>Hover or tap a feeling</strong>
             <div>A brief definition will appear here.</div>
           </div>
           <div id="feelings-wheel" class="wheel-canvas"></div>
         </div>
+
+        <div class="mobile-guided-wrap">
+          <div class="mobile-guided-intro">
+            <p class="eyebrow">Guided mode</p>
+            <h2>Not sure where to start?</h2>
+            <p>Use the same wheel one step at a time. Start broad, then narrow it down until a word feels right.</p>
+          </div>
+          <div id="mobile-feelings-picker" class="mobile-feelings-picker"></div>
+        </div>
+
         <div class="wheel-next">
           <span>Found the feeling?</span>
           <button type="button" class="button primary" data-go-tab="tool">Take it to the Lie → Need Tool</button>
@@ -481,7 +490,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .disclaimer{margin:1.2rem auto 0;text-align:center;color:#7c756e;font-size:.75rem}
     .feelings-intro{max-width:800px;margin-bottom:1.5rem}
     .wheel-card{position:relative;padding:1rem;background:#fff;box-shadow:0 22px 60px rgba(62,43,27,.08);overflow:hidden}
-    .mobile-feelings-picker{display:none}
+    .mobile-guided-wrap,.mobile-feelings-picker{display:none}
     .feeling-panel{position:absolute;top:1.4rem;left:1.4rem;z-index:2;max-width:320px;padding:.8rem 1rem;border-radius:14px;background:rgba(255,255,255,.96);box-shadow:0 8px 26px rgba(0,0,0,.13);font-size:.86rem;line-height:1.4}
     .feeling-panel strong{display:block;margin-bottom:.15rem;font-size:.95rem}.feeling-panel div{color:#66706b}
     .wheel-canvas{position:relative;width:100%;aspect-ratio:1/1;min-height:0;border-radius:18px;touch-action:pan-y!important}
@@ -501,34 +510,46 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       .result-card{grid-template-columns:1fr}.result-number{width:42px;height:42px}
       .lie-list,.resource-columns{grid-template-columns:1fr}
       .email-controls{flex-direction:column}.email-controls .button{width:100%}
-      .wheel-card{padding:0;background:transparent;border:0;box-shadow:none;overflow:visible}
-      .mobile-feelings-picker{display:block}
-      .feeling-panel,.wheel-canvas{display:none!important}
+      .wheel-card{padding:.75rem;background:#fff;border:1px solid rgba(32,37,34,.09);box-shadow:0 18px 40px rgba(62,43,27,.08);overflow:hidden}
+      .feeling-panel{position:static;max-width:none;margin-bottom:.65rem;padding:.8rem .95rem;box-shadow:none;background:#f6f1e9;border:1px solid rgba(32,37,34,.06)}
+      .wheel-canvas{display:block!important;min-height:0;aspect-ratio:1/1}
       .wheel-next{display:none}
-      .mobile-picker-shell{padding:1.15rem;border:1px solid rgba(32,37,34,.1);border-radius:24px;background:#fff;box-shadow:0 20px 45px rgba(62,43,27,.09)}
-      .mobile-picker-progress{display:flex;gap:.4rem;margin-bottom:1rem}
-      .mobile-picker-progress span{height:6px;flex:1;border-radius:999px;background:#e9e2d8}
+      .mobile-guided-wrap{display:block;margin-top:1.1rem}
+      .mobile-guided-intro{padding:.2rem .25rem .8rem}
+      .mobile-guided-intro h2{margin:.15rem 0 .4rem;font:400 clamp(2rem,8vw,2.7rem)/1.03 var(--serif)}
+      .mobile-guided-intro>p:last-child{margin:0;color:#6e6862;line-height:1.45}
+      .mobile-feelings-picker{display:block}
+      .mobile-picker-shell{overflow:hidden;border:1px solid rgba(32,37,34,.1);border-radius:22px;background:#fff;box-shadow:0 16px 38px rgba(62,43,27,.08)}
+      .mobile-picker-progress{display:flex;gap:.35rem;padding:1rem 1rem 0}
+      .mobile-picker-progress span{height:5px;flex:1;border-radius:999px;background:#ece5db}
       .mobile-picker-progress span.active{background:#df6b2d}
-      .mobile-picker-kicker{margin:0 0 .35rem;color:#9a5e35;text-transform:uppercase;letter-spacing:.11em;font-size:.68rem;font-weight:900}
-      .mobile-picker-title{margin:0;font:400 clamp(2rem,9vw,3rem)/1.02 var(--serif);color:#2e241f}
-      .mobile-picker-help{margin:.65rem 0 1.1rem;color:#6d6a66;line-height:1.5}
-      .mobile-picker-trail{display:flex;gap:.35rem;flex-wrap:wrap;margin:0 0 1rem}
-      .mobile-picker-trail span{padding:.42rem .62rem;border-radius:999px;background:#f2ece4;color:#5d5954;font-size:.72rem;font-weight:800}
-      .mobile-feeling-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
-      .mobile-feeling-choice{position:relative;min-height:86px;padding:1rem;border:1px solid rgba(32,37,34,.11);border-radius:18px;background:#fff;text-align:left;color:#2f2925;box-shadow:0 5px 16px rgba(56,43,30,.05);cursor:pointer}
-      .mobile-feeling-choice:active{transform:scale(.985)}
-      .mobile-feeling-choice::before{content:"";position:absolute;inset:0 auto 0 0;width:7px;border-radius:18px 0 0 18px;background:var(--feeling-color,#d66b32)}
-      .mobile-feeling-choice strong{display:block;padding-left:.25rem;font-size:1rem;line-height:1.15}
-      .mobile-feeling-choice small{display:block;padding-left:.25rem;margin-top:.35rem;color:#77706a;line-height:1.3;font-size:.72rem}
-      .mobile-picker-back{display:inline-flex;margin-top:1rem;border:0;background:transparent;color:#765947;font:800 .78rem var(--sans);cursor:pointer}
-      .mobile-feeling-result{padding:1.2rem;border-radius:20px;background:linear-gradient(145deg,#263732,#334d44);color:#fff}
+      .mobile-picker-kicker{margin:0 0 .28rem;color:#9a5e35;text-transform:uppercase;letter-spacing:.11em;font-size:.66rem;font-weight:900}
+      .mobile-picker-title{margin:0;font:400 clamp(1.85rem,8vw,2.55rem)/1.03 var(--serif);color:#2e241f}
+      .mobile-picker-help{margin:.55rem 0 0;color:#6d6a66;line-height:1.45}
+      .mobile-picker-trail{display:flex;gap:.35rem;flex-wrap:wrap;margin:.85rem 0 0}
+      .mobile-picker-trail span{padding:.38rem .58rem;border-radius:999px;background:#f3eee7;color:#5f5a54;font-size:.7rem;font-weight:800}
+      .mobile-picker-shell>.mobile-picker-kicker,
+      .mobile-picker-shell>.mobile-picker-title,
+      .mobile-picker-shell>.mobile-picker-help,
+      .mobile-picker-shell>.mobile-picker-trail{margin-left:1rem;margin-right:1rem}
+      .mobile-picker-shell>.mobile-picker-kicker{margin-top:.9rem}
+      .mobile-feeling-grid{display:block;margin-top:.8rem;border-top:1px solid #eee7de}
+      .mobile-feeling-choice{position:relative;display:grid;grid-template-columns:14px 1fr 18px;align-items:center;column-gap:.8rem;width:100%;min-height:70px;padding:.85rem 1rem;border:0;border-bottom:1px solid #eee7de;background:#fff;text-align:left;color:#2f2925;cursor:pointer}
+      .mobile-feeling-choice:last-child{border-bottom:0}
+      .mobile-feeling-choice::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--feeling-color,#d66b32);box-shadow:0 0 0 4px color-mix(in srgb,var(--feeling-color,#d66b32) 14%,transparent)}
+      .mobile-feeling-choice::after{content:"›";font-size:1.45rem;line-height:1;color:#a59b92}
+      .mobile-feeling-choice:active{background:#faf6f0}
+      .mobile-feeling-choice strong{display:block;font-size:1rem;line-height:1.15}
+      .mobile-feeling-choice small{display:block;margin-top:.24rem;color:#7b746d;line-height:1.28;font-size:.72rem}
+      .mobile-picker-back{display:inline-flex;margin:.85rem 1rem 1rem;border:0;background:transparent;color:#765947;font:800 .78rem var(--sans);cursor:pointer}
+      .mobile-feeling-result{margin:0;padding:1.25rem;border-radius:21px;background:linear-gradient(145deg,#263732,#334d44);color:#fff}
       .mobile-feeling-result .mobile-picker-kicker{color:#f0b365}
       .mobile-feeling-result h3{margin:.15rem 0 .45rem;font:400 clamp(2.2rem,10vw,3.6rem)/1 var(--serif);color:#fff}
       .mobile-feeling-result p{margin:.2rem 0;color:rgba(255,255,255,.78);line-height:1.5}
       .mobile-result-actions{display:grid;gap:.65rem;margin-top:1rem}
       .mobile-result-actions .button{width:100%;justify-content:center}
       .mobile-reset-button{min-height:48px;border:1px solid rgba(255,255,255,.25);border-radius:14px;background:transparent;color:#fff;font:800 .8rem var(--sans)}
-      .mobile-picker-note{margin:1rem 0 0;text-align:center;color:#867d75;font-size:.7rem;line-height:1.4}
+      .mobile-picker-note{margin:.8rem 1rem 1rem;text-align:center;color:#867d75;font-size:.7rem;line-height:1.4}
     }
     @media(max-width:479px){
       .tools-tabs-wrap{padding:0 3vw}
