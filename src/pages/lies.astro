@@ -148,9 +148,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <div class="feelings-intro">
           <p class="eyebrow">Feelings Wheel</p>
           <h1>Put language to what you feel.</h1>
-          <p>Hover over or tap a feeling to see a short definition. On mobile, tap a section to zoom in so the more specific feelings are easier to read.</p>
+          <p>Start broad, then narrow it down. On your phone, the wheel becomes a simple guided picker so you can move from a big feeling to the exact word that fits.</p>
         </div>
         <div class="wheel-card">
+          <div id="mobile-feelings-picker" class="mobile-feelings-picker"></div>
           <div id="feeling-panel" class="feeling-panel">
             <strong>Hover or tap a feeling</strong>
             <div>A brief definition will appear here.</div>
@@ -480,6 +481,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .disclaimer{margin:1.2rem auto 0;text-align:center;color:#7c756e;font-size:.75rem}
     .feelings-intro{max-width:800px;margin-bottom:1.5rem}
     .wheel-card{position:relative;padding:1rem;background:#fff;box-shadow:0 22px 60px rgba(62,43,27,.08);overflow:hidden}
+    .mobile-feelings-picker{display:none}
     .feeling-panel{position:absolute;top:1.4rem;left:1.4rem;z-index:2;max-width:320px;padding:.8rem 1rem;border-radius:14px;background:rgba(255,255,255,.96);box-shadow:0 8px 26px rgba(0,0,0,.13);font-size:.86rem;line-height:1.4}
     .feeling-panel strong{display:block;margin-bottom:.15rem;font-size:.95rem}.feeling-panel div{color:#66706b}
     .wheel-canvas{position:relative;width:100%;aspect-ratio:1/1;min-height:0;border-radius:18px;touch-action:pan-y!important}
@@ -499,10 +501,34 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       .result-card{grid-template-columns:1fr}.result-number{width:42px;height:42px}
       .lie-list,.resource-columns{grid-template-columns:1fr}
       .email-controls{flex-direction:column}.email-controls .button{width:100%}
-      .feeling-panel{position:static;max-width:none;margin-bottom:.7rem;padding:.85rem 1rem;box-shadow:none;background:#f6f2eb}
-      .wheel-card{padding:.75rem}
-      .wheel-canvas{min-height:0;aspect-ratio:1/1}
-      .wheel-next{align-items:stretch;flex-direction:column}
+      .wheel-card{padding:0;background:transparent;border:0;box-shadow:none;overflow:visible}
+      .mobile-feelings-picker{display:block}
+      .feeling-panel,.wheel-canvas{display:none!important}
+      .wheel-next{display:none}
+      .mobile-picker-shell{padding:1.15rem;border:1px solid rgba(32,37,34,.1);border-radius:24px;background:#fff;box-shadow:0 20px 45px rgba(62,43,27,.09)}
+      .mobile-picker-progress{display:flex;gap:.4rem;margin-bottom:1rem}
+      .mobile-picker-progress span{height:6px;flex:1;border-radius:999px;background:#e9e2d8}
+      .mobile-picker-progress span.active{background:#df6b2d}
+      .mobile-picker-kicker{margin:0 0 .35rem;color:#9a5e35;text-transform:uppercase;letter-spacing:.11em;font-size:.68rem;font-weight:900}
+      .mobile-picker-title{margin:0;font:400 clamp(2rem,9vw,3rem)/1.02 var(--serif);color:#2e241f}
+      .mobile-picker-help{margin:.65rem 0 1.1rem;color:#6d6a66;line-height:1.5}
+      .mobile-picker-trail{display:flex;gap:.35rem;flex-wrap:wrap;margin:0 0 1rem}
+      .mobile-picker-trail span{padding:.42rem .62rem;border-radius:999px;background:#f2ece4;color:#5d5954;font-size:.72rem;font-weight:800}
+      .mobile-feeling-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+      .mobile-feeling-choice{position:relative;min-height:86px;padding:1rem;border:1px solid rgba(32,37,34,.11);border-radius:18px;background:#fff;text-align:left;color:#2f2925;box-shadow:0 5px 16px rgba(56,43,30,.05);cursor:pointer}
+      .mobile-feeling-choice:active{transform:scale(.985)}
+      .mobile-feeling-choice::before{content:"";position:absolute;inset:0 auto 0 0;width:7px;border-radius:18px 0 0 18px;background:var(--feeling-color,#d66b32)}
+      .mobile-feeling-choice strong{display:block;padding-left:.25rem;font-size:1rem;line-height:1.15}
+      .mobile-feeling-choice small{display:block;padding-left:.25rem;margin-top:.35rem;color:#77706a;line-height:1.3;font-size:.72rem}
+      .mobile-picker-back{display:inline-flex;margin-top:1rem;border:0;background:transparent;color:#765947;font:800 .78rem var(--sans);cursor:pointer}
+      .mobile-feeling-result{padding:1.2rem;border-radius:20px;background:linear-gradient(145deg,#263732,#334d44);color:#fff}
+      .mobile-feeling-result .mobile-picker-kicker{color:#f0b365}
+      .mobile-feeling-result h3{margin:.15rem 0 .45rem;font:400 clamp(2.2rem,10vw,3.6rem)/1 var(--serif);color:#fff}
+      .mobile-feeling-result p{margin:.2rem 0;color:rgba(255,255,255,.78);line-height:1.5}
+      .mobile-result-actions{display:grid;gap:.65rem;margin-top:1rem}
+      .mobile-result-actions .button{width:100%;justify-content:center}
+      .mobile-reset-button{min-height:48px;border:1px solid rgba(255,255,255,.25);border-radius:14px;background:transparent;color:#fff;font:800 .8rem var(--sans)}
+      .mobile-picker-note{margin:1rem 0 0;text-align:center;color:#867d75;font-size:.7rem;line-height:1.4}
     }
     @media(max-width:479px){
       .tools-tabs-wrap{padding:0 3vw}
