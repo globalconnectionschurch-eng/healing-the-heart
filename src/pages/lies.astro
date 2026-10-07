@@ -15,21 +15,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <section id="panel-instructions" class="tools-panel active" role="tabpanel" data-panel="instructions">
       <div class="instructions-hero">
         <p class="eyebrow">Start here</p>
-        <h1>Name the lie. Find the need. Receive truth.</h1>
-        <p>Every lie we carry came from a moment of pain—often where a real emotional need went unmet. Jesus doesn't shame us for those places; He meets us there with truth, presence, and healing. This simple tool helps you name the lie, trace it to the core emotional need, and turn toward God to receive what your heart is still hungry for.</p>
+        <h1>Understand the trigger. Discover the need. Find healing.</h1>
+        <p>Pain often shows up first as a reaction—a moment that hurt, frustrated, angered, embarrassed, or triggered us. You do not have to know the lie underneath it yet. Start with what happened, and this tool will help you explore what may have been touched, what emotional need may be underneath it, and where truth and healing can begin.</p>
       </div>
 
       <div class="instructions-grid">
         <article class="instructions-card">
           <p class="eyebrow">How it helps</p>
           <div class="instruction-steps">
-            <div><span>01</span><p><strong>Name it.</strong> Type a word or phrase—a lie you've been believing, such as “not enough” or “unwanted.”</p></div>
+            <div><span>01</span><p><strong>Start with what happened.</strong> Describe a situation, conversation, thought, or event that upset, hurt, frustrated, or triggered you. You do not need to know what lie you may be believing—the tool will help you explore what may be underneath it.</p></div>
             <div><span>02</span><p><strong>Find the feeling.</strong> If it helps, use the <button class="text-tab-link" type="button" data-go-tab="feelings">Feelings Wheel</button> to put language to what is happening inside.</p></div>
-            <div><span>03</span><p><strong>Locate the need.</strong> See which of the 10 emotional needs the lie touches: Acceptance, Affection, Attention, Affirmation, Security, Comfort, Encouragement, Support, Appreciation, or Respect.</p></div>
+            <div><span>03</span><p><strong>Locate the need.</strong> See which of the 10 emotional needs may be underneath the trigger or reaction: Acceptance, Affection, Attention, Affirmation, Security, Comfort, Encouragement, Support, Appreciation, or Respect.</p></div>
             <div><span>04</span><p><strong>Receive truth.</strong> Use the Scriptures and practices to replace lies with truth and meet with God in a concrete way.</p></div>
             <div><span>05</span><p><strong>Walk it out.</strong> Small daily practices help form new pathways so your default becomes turning to God when your cup feels empty.</p></div>
           </div>
-          <button class="button primary start-tool" type="button" data-go-tab="tool">Start the Lie → Need Tool</button>
+          <button class="button primary start-tool" type="button" data-go-tab="tool"><span>Open the Lie / Emotional Needs Tool</span><strong>Start here →</strong></button>
         </article>
 
         <aside class="prayer-card">
@@ -71,20 +71,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <div>
             <p class="eyebrow">Lie → Need</p>
             <h1>What got touched?</h1>
-            <p>Start with one lie, thought, trigger, or brief situation. This tool helps you slow it down, identify what may be underneath it, and move toward truth.</p>
+            <p>Start with what happened—a situation, conversation, thought, trigger, or lie. You do not have to know the lie yet. Describe the moment, and the tool will help you look underneath the reaction.</p>
           </div>
-          <div class="tool-note"><span>01</span><p>One trigger at a time usually gives the clearest result.</p></div>
+          <div class="tool-note"><span>START</span><p>You do not need the perfect words. One real moment at a time usually gives the clearest result.</p></div>
         </div>
 
         <div class="input-card">
-          <label for="mainText">What are you believing, thinking, or reacting to?</label>
-          <textarea id="mainText" rows="5" maxlength="250" placeholder='Examples: "I am unseen" or "I cleaned up and nobody thanked me"'></textarea>
+          <div class="input-prompt"><span></span><strong>No need to know the lie yet—just start with what happened.</strong></div>
+          <label for="mainText">What happened, or what are you reacting to?</label>
+          <textarea id="mainText" rows="5" maxlength="250" placeholder='Examples: "I got angry when they ignored what I said" or "I helped everyone and nobody even noticed"'></textarea>
           <div class="input-footer">
             <span>Press Enter to analyze • Shift + Enter for a new line</span>
             <span id="charCounter">0 / 250</span>
           </div>
           <div class="tool-actions">
-            <button id="analyzeBtn" class="button primary" type="button">Analyze this</button>
+            <button id="analyzeBtn" class="button primary analyze-primary" type="button">Help me understand this →</button>
             <button id="clearBtn" class="button outline" type="button">Clear</button>
           </div>
           <div id="status" class="status" aria-live="polite" hidden></div>
@@ -293,7 +294,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         return;
       }
       analyzeBtn.disabled = true;
-      analyzeBtn.textContent = 'Analyzing…';
+      analyzeBtn.textContent = 'Looking underneath this…';
       showStatus('Looking at what may have been touched…', 'loading');
       try {
         const response = await fetch('/api/lies/analyze', {
@@ -310,7 +311,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         showStatus(error instanceof Error ? error.message : 'Something went wrong. Please try again.', 'error');
       } finally {
         analyzeBtn.disabled = false;
-        analyzeBtn.textContent = 'Analyze this';
+        analyzeBtn.textContent = 'Help me understand this →';
       }
     }
 
@@ -376,9 +377,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <style is="global">
     .tools-shell{min-height:70vh;background:linear-gradient(180deg,#f4efe6 0%,#fbf8f2 42%,#f4efe6 100%)}
     .tools-tabs-wrap{position:sticky;top:67px;z-index:15;padding:0 5vw;background:rgba(255,253,248,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
-    .tools-tabs{max-width:1160px;margin:0 auto;display:flex;gap:.25rem;overflow-x:auto;padding:.65rem 0}
-    .tools-tab{flex:0 0 auto;border:0;background:transparent;padding:.8rem 1rem;border-radius:999px;font:800 .78rem var(--sans);color:#67716b;cursor:pointer}
-    .tools-tab.active{background:var(--deep);color:#fff}
+    .tools-tabs{max-width:1160px;margin:0 auto;display:flex;gap:.65rem;overflow-x:auto;padding:.85rem 0}
+    .tools-tab{flex:0 0 auto;min-height:48px;border:1px solid rgba(32,37,34,.12);background:#f7f2ea;padding:.9rem 1.2rem;border-radius:999px;font:900 .86rem var(--sans);color:#4d5953;cursor:pointer;box-shadow:0 3px 10px rgba(56,43,30,.04);transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
+    .tools-tab:hover{transform:translateY(-1px);box-shadow:0 7px 18px rgba(56,43,30,.08)}
+    .tools-tab.active{background:var(--deep);border-color:var(--deep);color:#fff;box-shadow:0 8px 22px rgba(38,55,50,.2)}
+    .tools-tab[data-tab="tool"]{background:linear-gradient(135deg,#e97832,#cb5525);border-color:#c95424;color:#fff;min-width:225px;box-shadow:0 8px 22px rgba(214,107,50,.24)}
+    .tools-tab[data-tab="tool"].active{background:linear-gradient(135deg,#263732,#1b2925);border-color:#1b2925;box-shadow:0 10px 26px rgba(38,55,50,.28)}
     .tools-panel{max-width:1160px;margin:0 auto;padding:4.5rem 5vw 6rem}
     .tools-panel[hidden]{display:none!important}
     .instructions-hero{max-width:860px;margin-bottom:2.4rem}
@@ -394,6 +398,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .instruction-steps p{margin:.15rem 0;color:#59635e}
     .instruction-steps strong{color:var(--ink)}
     .text-tab-link{border:0;padding:0;background:transparent;color:#9a5e35;font:inherit;font-weight:800;text-decoration:underline;cursor:pointer}
+    .start-tool{width:100%;min-height:66px!important;padding:1rem 1.25rem!important;border-radius:18px!important;display:flex!important;align-items:center;justify-content:space-between;gap:1rem;font-size:.95rem!important;box-shadow:0 14px 28px rgba(214,107,50,.24)!important}
+    .start-tool span{font-weight:900}.start-tool strong{font-size:1.02rem;white-space:nowrap}
     .prayer-card{padding:2rem;background:var(--deep);color:#fff;display:flex;flex-direction:column;justify-content:center}
     .prayer-card .eyebrow{color:#f2c56e}
     .prayer{margin:0;font:italic 400 1.2rem/1.7 var(--serif);color:rgba(255,255,255,.9)}
@@ -412,16 +418,27 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .honeypot{position:absolute!important;left:-9999px!important}
     .form-status{margin:0;padding:.8rem 1rem;border-radius:12px;background:#edf1ed;color:#445a50}
     .tool-page,.feelings-page{max-width:1050px;margin:0 auto}
-    .tool-intro{display:grid;grid-template-columns:1.4fr .6fr;gap:2rem;align-items:end;margin-bottom:1.5rem}
-    .tool-note{padding:1.1rem 1.2rem;border-top:1px solid rgba(32,37,34,.17);display:flex;gap:.8rem}
-    .tool-note span{font-size:.7rem;font-weight:900;color:var(--ember)}
-    .tool-note p{margin:0;color:var(--muted);font-size:.9rem}
-    .input-card{padding:clamp(1.25rem,3vw,2.2rem);background:rgba(255,253,248,.96);box-shadow:0 22px 60px rgba(62,43,27,.08)}
-    .input-card label{display:block;margin-bottom:.65rem;font-weight:800;font-size:.9rem}
-    .input-card textarea{width:100%;min-height:145px;resize:vertical;padding:1.15rem 1.2rem;border:1px solid rgba(32,37,34,.16);border-radius:18px;background:#fff;font:400 1.05rem/1.6 var(--sans)}
-    .input-card textarea:focus{outline:0;border-color:rgba(214,107,50,.65);box-shadow:0 0 0 4px rgba(214,107,50,.08)}
-    .input-footer{display:flex;justify-content:space-between;gap:1rem;margin:.55rem .2rem 0;color:var(--muted);font-size:.72rem}
+    #panel-tool{padding-top:3.2rem}
+    .tool-intro{position:relative;overflow:hidden;display:grid;grid-template-columns:1.35fr .65fr;gap:2rem;align-items:end;margin-bottom:0;padding:clamp(1.8rem,4vw,3.1rem);border-radius:32px;background:radial-gradient(circle at 88% 12%,rgba(242,181,94,.32),transparent 28%),linear-gradient(135deg,#1e302b 0%,#314b42 65%,#3f594e 100%);color:#fff;box-shadow:0 28px 70px rgba(31,48,43,.22)}
+    .tool-intro:after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;right:-120px;bottom:-150px;border:1px solid rgba(255,255,255,.12);box-shadow:0 0 0 36px rgba(255,255,255,.025),0 0 0 76px rgba(255,255,255,.018)}
+    .tool-intro>div{position:relative;z-index:1}
+    .tool-intro .eyebrow{color:#f5b866}
+    .tool-intro h1{color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.08)}
+    .tool-intro>div:first-child>p:last-child{color:rgba(255,255,255,.78);max-width:720px}
+    .tool-note{position:relative;z-index:1;padding:1.1rem 1.2rem;border:1px solid rgba(255,255,255,.14);border-radius:18px;background:rgba(255,255,255,.075);display:flex;gap:.8rem;backdrop-filter:blur(8px)}
+    .tool-note span{font-size:.7rem;font-weight:900;color:#f5b866;letter-spacing:.08em}
+    .tool-note p{margin:0;color:rgba(255,255,255,.82);font-size:.9rem;line-height:1.5}
+    .input-card{position:relative;z-index:2;margin:-1.15rem 1.25rem 0;padding:clamp(1.35rem,3vw,2.35rem);background:linear-gradient(145deg,#fffdf9 0%,#fff7ec 100%);border:2px solid rgba(214,107,50,.22);box-shadow:0 26px 60px rgba(62,43,27,.14)}
+    .input-prompt{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;padding:.7rem .85rem;border-radius:12px;background:#fff0df;color:#8c4b28;font-size:.78rem}
+    .input-prompt span{width:9px;height:9px;border-radius:50%;background:#e46b2d;box-shadow:0 0 0 5px rgba(228,107,45,.12);flex:0 0 auto}
+    .input-card label{display:block;margin-bottom:.7rem;font-weight:900;font-size:1rem;color:#27332f}
+    .input-card textarea{width:100%;min-height:180px;resize:vertical;padding:1.2rem 1.25rem;border:2px solid #ddc9b8;border-radius:18px;background:#fff;font:400 1.08rem/1.6 var(--sans);box-shadow:inset 0 1px 2px rgba(38,55,50,.03)}
+    .input-card textarea::placeholder{color:#99897d}
+    .input-card textarea:focus{outline:0;border-color:#e06c31;box-shadow:0 0 0 5px rgba(224,108,49,.11)}
+    .input-footer{display:flex;justify-content:space-between;gap:1rem;margin:.6rem .2rem 0;color:#7e736b;font-size:.74rem}
     .tool-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem}
+    .analyze-primary{min-height:54px!important;padding:.95rem 1.35rem!important;border-radius:16px!important;font-size:.92rem!important;box-shadow:0 12px 24px rgba(214,107,50,.24)!important}
+    .tool-actions .outline{min-height:54px;padding:.95rem 1.25rem;border-radius:16px!important;background:#fff!important}
     .status{margin-top:1rem;padding:.85rem 1rem;border-radius:12px;background:#f2eee7;color:#685f55;font-size:.85rem}
     .status[data-kind="error"]{background:#f7e8e4;color:#8b493d}.status[data-kind="loading"]{background:#edf1ed;color:#4d655b}
     .results{margin-top:3rem;scroll-margin-top:160px}
@@ -475,6 +492,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       .tools-tabs-wrap{top:66px}
       .tools-panel{padding-top:3rem}
       .instructions-grid,.facilitator-card,.tool-intro,.email-card{grid-template-columns:1fr}
+      .tool-intro{border-radius:24px;padding:1.6rem}
+      .input-card{margin:-.7rem .6rem 0}
+      .tools-tab[data-tab="tool"]{min-width:210px}
       .results-heading{align-items:flex-start;flex-direction:column}.need-pills{justify-content:flex-start}
       .result-card{grid-template-columns:1fr}.result-number{width:42px;height:42px}
       .lie-list,.resource-columns{grid-template-columns:1fr}
@@ -485,7 +505,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     }
     @media(max-width:479px){
       .tools-tabs-wrap{padding:0 3vw}
-      .tools-tab{padding:.72rem .8rem;font-size:.7rem}
+      .tools-tabs{gap:.45rem;padding:.7rem 0}
+      .tools-tab{min-height:44px;padding:.72rem .9rem;font-size:.72rem}
+      .tools-tab[data-tab="tool"]{min-width:205px}
+      .tool-intro{padding:1.4rem}
+      .input-card{margin:-.5rem .25rem 0}
       .tools-panel{padding-left:4.5vw;padding-right:4.5vw}
       .wheel-canvas{min-height:700px}
       .input-footer{flex-direction:column;gap:.2rem}
