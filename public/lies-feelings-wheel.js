@@ -183,39 +183,107 @@
     const target = document.getElementById('feelings-wheel');
     if (!target || !window.Highcharts) return null;
 
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+    const chartHeight = isMobile
+      ? Math.max(300, Math.round(target.getBoundingClientRect().width))
+      : '100%';
+
     wheelChart = window.Highcharts.chart('feelings-wheel', {
-      chart: { height: '100%', backgroundColor: 'transparent' },
+      chart: {
+        height: chartHeight,
+        backgroundColor: 'transparent',
+        spacing: isMobile ? [4, 4, 4, 4] : [10, 10, 10, 10]
+      },
       title: { text: '' },
-      breadcrumbs: { enabled: false },
+      breadcrumbs: {
+        enabled: isMobile,
+        floating: false,
+        position: { align: 'left' },
+        buttonTheme: {
+          style: { fontSize: '11px', fontWeight: '700', color: '#4d5953' }
+        }
+      },
       series: [{
         type: 'sunburst',
         data: wheelData,
-        allowDrillToNode: false,
+        allowDrillToNode: isMobile,
         cursor: 'pointer',
         point: {
           events: {
             mouseOver: function () { updatePanel(this); },
-            click: function (event) {
-              if (event && event.preventDefault) event.preventDefault();
-              updatePanel(this);
-            }
+            click: function () { updatePanel(this); }
           }
         },
         dataLabels: {
           rotationMode: 'auto',
-          filter: { property: 'innerArcLength', operator: '>', value: 16 },
-          style: { fontSize: '12px', fontWeight: '500', textOutline: 'none', color: '#202522' }
+          filter: { property: 'innerArcLength', operator: '>', value: isMobile ? 22 : 16 },
+          style: {
+            fontSize: isMobile ? '9px' : '12px',
+            fontWeight: '600',
+            textOutline: 'none',
+            color: '#202522'
+          }
         },
         levels: [
-          { level: 1, levelIsConstant: true, dataLabels: { style: { fontSize: '14px', fontWeight: '700', textOutline: 'none', color: '#202522' } } },
-          { level: 2, colorByPoint: true, dataLabels: { style: { textOutline: 'none', color: '#202522' } } },
-          { level: 3, dataLabels: { style: { textOutline: 'none', color: '#202522' } } },
-          { level: 4, dataLabels: { style: { textOutline: 'none', color: '#202522' } } }
+          {
+            level: 1,
+            levelIsConstant: true,
+            dataLabels: {
+              style: {
+                fontSize: isMobile ? '10px' : '14px',
+                fontWeight: '800',
+                textOutline: 'none',
+                color: '#202522'
+              }
+            }
+          },
+          {
+            level: 2,
+            colorByPoint: true,
+            dataLabels: {
+              style: {
+                fontSize: isMobile ? '10px' : '12px',
+                fontWeight: '700',
+                textOutline: 'none',
+                color: '#202522'
+              }
+            }
+          },
+          {
+            level: 3,
+            dataLabels: {
+              style: {
+                fontSize: isMobile ? '9px' : '12px',
+                textOutline: 'none',
+                color: '#202522'
+              }
+            }
+          },
+          {
+            level: 4,
+            dataLabels: {
+              style: {
+                fontSize: isMobile ? '8px' : '12px',
+                textOutline: 'none',
+                color: '#202522'
+              }
+            }
+          }
         ]
       }],
       tooltip: { enabled: false },
       credits: { enabled: false }
     });
+
+    if (isMobile) {
+      const resizeWheel = () => {
+        if (!wheelChart) return;
+        const width = target.getBoundingClientRect().width;
+        if (width > 0) wheelChart.setSize(null, Math.max(300, Math.round(width)), false);
+      };
+      window.addEventListener('resize', resizeWheel, { passive: true });
+    }
+
     return wheelChart;
   };
 })();
