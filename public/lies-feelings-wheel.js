@@ -335,10 +335,7 @@
 
   window.initHthFeelingsWheel = function initHthFeelingsWheel() {
     const isMobile = window.matchMedia('(max-width: 800px)').matches;
-    if (isMobile) {
-      renderMobilePicker();
-      return null;
-    }
+    if (isMobile) renderMobilePicker();
 
     if (wheelChart) {
       setTimeout(() => wheelChart.reflow(), 30);
@@ -348,11 +345,15 @@
     const target = document.getElementById('feelings-wheel');
     if (!target || !window.Highcharts) return null;
 
+    const chartHeight = isMobile
+      ? Math.max(300, Math.round(target.getBoundingClientRect().width))
+      : '100%';
+
     wheelChart = window.Highcharts.chart('feelings-wheel', {
       chart: {
-        height: '100%',
+        height: chartHeight,
         backgroundColor: 'transparent',
-        spacing: [10, 10, 10, 10]
+        spacing: isMobile ? [4, 4, 4, 4] : [10, 10, 10, 10]
       },
       title: { text: '' },
       breadcrumbs: { enabled: false },
@@ -369,9 +370,9 @@
         },
         dataLabels: {
           rotationMode: 'auto',
-          filter: { property: 'innerArcLength', operator: '>', value: 16 },
+          filter: { property: 'innerArcLength', operator: '>', value: isMobile ? 26 : 16 },
           style: {
-            fontSize: '12px',
+            fontSize: isMobile ? '9px' : '12px',
             fontWeight: '600',
             textOutline: 'none',
             color: '#202522'
@@ -382,6 +383,7 @@
             level: 1,
             levelIsConstant: true,
             dataLabels: {
+              enabled: !isMobile,
               style: {
                 fontSize: '14px',
                 fontWeight: '800',
@@ -394,9 +396,10 @@
             level: 2,
             colorByPoint: true,
             dataLabels: {
+              enabled: true,
               style: {
-                fontSize: '12px',
-                fontWeight: '700',
+                fontSize: isMobile ? '11px' : '12px',
+                fontWeight: '800',
                 textOutline: 'none',
                 color: '#202522'
               }
@@ -405,6 +408,7 @@
           {
             level: 3,
             dataLabels: {
+              enabled: !isMobile,
               style: {
                 fontSize: '12px',
                 textOutline: 'none',
@@ -415,6 +419,7 @@
           {
             level: 4,
             dataLabels: {
+              enabled: !isMobile,
               style: {
                 fontSize: '12px',
                 textOutline: 'none',
@@ -427,6 +432,15 @@
       tooltip: { enabled: false },
       credits: { enabled: false }
     });
+
+    if (isMobile) {
+      const resizeWheel = () => {
+        if (!wheelChart) return;
+        const width = target.getBoundingClientRect().width;
+        if (width > 0) wheelChart.setSize(null, Math.max(300, Math.round(width)), false);
+      };
+      window.addEventListener('resize', resizeWheel, { passive: true });
+    }
 
     return wheelChart;
   };
