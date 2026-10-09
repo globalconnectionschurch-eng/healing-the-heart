@@ -35,7 +35,46 @@ Astro.response.headers.set('Cache-Control', 'no-store');
     const escapeText=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     const login=$('login-form');
     if(login)login.addEventListener('submit',async event=>{event.preventDefault();const button=login.querySelector('button');button.disabled=true;const response=await fetch('/api/admindiscount/session',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:login.elements.password.value})});const data=await response.json();button.disabled=false;if(response.ok)location.reload();else $('login-message').textContent=data.error||'Could not sign in.';});
-    async function refresh(){const container=$('discount-list');if(!container)return;const response=await fetch('/api/admindiscount/codes',{cache:'no-store'});if(response.status===401){location.reload();return}if(!response.ok){container.textContent='Unable to load discounts.';return}const {discounts=[]}=await response.json();container.innerHTML=discounts.map(d=>'<div class="code-row"><div><strong>'+escapeText(d.code)+'</strong><small>'+(d.second_percent_off!=null?'Group: Person 1 '+d.percent_off+'% / Person 2 '+d.second_percent_off+'%':'Standard: '+d.percent_off+'% off')+'</small>'+(d.student_name?'<small>For '+escapeText(d.student_name)+'</small>':'')+'</div><div class="code-meta"><span>'+escapeText(d.class_title||'All classes')+'</span><span>Used '+Number(d.used_count||0)+(d.max_uses!=null?' / '+Number(d.max_uses):'')+'</span>'+(d.expires_at?'<span>Expires '+escapeText(d.expires_at.slice(0,10))+'</span>':'')+'</div></div>').join('')||'<p>No active discount codes.</p>';}
+
+    const readableDate=value=>{
+      if(!value)return 'No expiry';
+      const date=new Date(value);
+      return Number.isNaN(date.getTime())?String(value).slice(0,10):date.toLocaleDateString('en-CA',{year:'numeric',month:'short',day:'numeric'});
+    };
+    const countLabel=value=>value===1?'1 time':value+' times';
+    const makeCard=d=>{
+      const group=d.second_percent_off!=null;
+      const used=Math.max(0,Number(d.used_count)||0);
+      const limit=d.max_uses==null?null:Math.max(0,Number(d.max_uses)||0);
+      const remaining=limit==null?null:Math.max(0,limit-used);
+      const exhausted=remaining===0;
+      const progress=limit?Math.min(100,Math.round(used/limit*100)):0;
+      const title=escapeText(d.code);
+      const offer=group
+        ? '<div class="offer-pair"><div><span class="offer-number">'+Number(d.percent_off)+'%</span><span class="offer-caption">First attendee</span></div><div><span class="offer-number">'+Number(d.second_percent_off)+'%</span><span class="offer-caption">Second attendee</span></div></div>'
+        : '<div class="single-offer"><span class="offer-number">'+Number(d.percent_off)+'%</span><span class="offer-off">OFF</span></div>';
+      return '<article class="discount-card" aria-label="Discount '+title+'">'
+        +'<div class="discount-card-header"><div class="discount-card-heading"><span class="discount-kind">'+(group?'GROUP DISCOUNT':'STANDARD DISCOUNT')+'</span><h3>'+title+'</h3></div><span class="discount-status'+(exhausted?' is-exhausted':'')+'">'+(exhausted?'Limit reached':'Active')+'</span></div>'
+        +'<div class="discount-offer">'+offer+'</div>'
+        +'<div class="discount-usage"><div class="usage-summary"><div><span class="field-heading">Times used</span><strong>'+countLabel(used)+'</strong></div><div class="usage-right"><span class="field-heading">'+(limit==null?'Usage limit':'Remaining uses')+'</span><strong>'+(limit==null?'Unlimited':remaining+' of '+limit)+'</strong></div></div>'
+        +(limit!=null?'<div class="usage-track" role="progressbar" aria-label="Discount uses" aria-valuemin="0" aria-valuemax="'+limit+'" aria-valuenow="'+used+'"><div class="usage-fill" style="width:'+progress+'%"></div></div>':'')
+        +'</div>'
+        +'<div class="discount-card-details">'
+        +'<div><span class="field-heading">Applicable classes</span><strong>'+escapeText(d.class_title||'All classes')+'</strong></div>'
+        +'<div><span class="field-heading">Expires</span><strong>'+escapeText(readableDate(d.expires_at))+'</strong></div>'
+        +(d.student_name?'<div class="details-full"><span class="field-heading">Assigned to</span><strong>'+escapeText(d.student_name)+'</strong></div>':'')
+        +(d.starts_at?'<div class="details-full"><span class="field-heading">Starts</span><strong>'+escapeText(readableDate(d.starts_at))+'</strong></div>':'')
+        +'</div></article>';
+    };
+    async function refresh(){
+      const container=$('discount-list');
+      if(!container)return;
+      const response=await fetch('/api/admindiscount/codes',{cache:'no-store'});
+      if(response.status===401){location.reload();return}
+      if(!response.ok){container.textContent='Unable to load discounts.';return}
+      const {discounts=[]}=await response.json();
+      container.innerHTML=discounts.length?discounts.map(makeCard).join(''):'<div class="discount-empty">No active discount codes yet.</div>';
+    }
     if($('dashboard')){
       $('logout').addEventListener('click',async()=>{await fetch('/api/admindiscount/session',{method:'DELETE'});location.reload();});
       $('open-create').addEventListener('click',()=>{$('create-panel').hidden=false;$('open-create').hidden=true;});
@@ -46,7 +85,50 @@ Astro.response.headers.set('Cache-Control', 'no-store');
       refresh();
     }
   </script>
-  <style>
-    .discount-room [hidden]{display:none!important}.discount-room{max-width:920px;margin:3rem auto;padding:0 1.2rem;min-height:50vh}.discount-room .heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}.discount-room h1{margin:.2rem 0;font-size:clamp(2rem,5vw,3.2rem)}.discount-room h2{margin:0}.discount-room .toolbar{margin:1.8rem 0}.discount-room .panel{border:1px solid #e1ded8;border-radius:20px;padding:1.7rem;background:#fff;box-shadow:0 12px 40px #0000000b;margin:1.5rem 0}.discount-room #login-panel{max-width:500px;margin:5rem auto}.discount-room label{display:grid;gap:.4rem;font-weight:600;margin:1rem 0}.discount-room input,.discount-room select{width:100%;padding:.85rem;border:1px solid #d1cec7;border-radius:10px;font:inherit;box-sizing:border-box}.discount-room .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.discount-room .note{color:#555;font-size:.92rem}.discount-list{border:1px solid #e4e0da;border-radius:18px;background:#fff}.code-row{padding:1.15rem 1.4rem;display:flex;gap:1rem;justify-content:space-between;border-bottom:1px solid #eee}.code-row:last-child{border:0}.code-row strong{font-size:1.2rem}.code-row small{display:block;color:#697069;margin-top:.25rem}.code-meta{display:flex;flex-direction:column;gap:.1rem;text-align:right;color:#5b635d;font-size:.86rem}#login-message,#create-message{color:#9d2929}@media(max-width:600px){.discount-room .two-col{grid-template-columns:1fr}.code-row{flex-direction:column}.code-meta{text-align:left}.discount-room .panel{padding:1rem}}
+  <style is:global>
+    .discount-room{max-width:1040px;margin:3rem auto;padding:0 1.25rem 4rem;min-height:50vh}
+    .discount-room [hidden]{display:none!important}
+    .discount-room .heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+    .discount-room h1{margin:.2rem 0;font-size:clamp(2rem,5vw,3.2rem)}
+    .discount-room h2{margin:0}
+    .discount-room .toolbar{margin:1.8rem 0}
+    .discount-room .panel{border:1px solid #e1ded8;border-radius:20px;padding:1.7rem;background:#fff;box-shadow:0 12px 40px #0000000b;margin:1.5rem 0}
+    .discount-room #login-panel{max-width:500px;margin:5rem auto}
+    .discount-room label{display:grid;gap:.4rem;font-weight:600;margin:1rem 0}
+    .discount-room input,.discount-room select{width:100%;padding:.85rem;border:1px solid #d1cec7;border-radius:10px;font:inherit;box-sizing:border-box}
+    .discount-room .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .discount-room .note{color:#555;font-size:.92rem}
+    .discount-room .discount-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.15rem;align-items:stretch}
+    .discount-room .discount-card{position:relative;display:flex;flex-direction:column;min-width:0;padding:1.5rem;background:#fff;border:1px solid #e6e1d9;border-radius:20px;box-shadow:0 12px 36px rgba(43,50,46,.06);overflow:hidden}
+    .discount-room .discount-card::before{content:"";position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,#1b5361,#67a7a7)}
+    .discount-room .discount-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+    .discount-room .discount-card-heading{min-width:0}
+    .discount-room .discount-kind{display:block;font-size:.68rem;font-weight:800;letter-spacing:.12em;color:#69817f}
+    .discount-room .discount-card h3{font-size:clamp(1.1rem,2vw,1.4rem);line-height:1.35;overflow-wrap:anywhere;margin:.45rem 0 0;letter-spacing:-.01em;color:#1f373d}
+    .discount-room .discount-status{flex:none;background:#ebf5ed;border:1px solid #d1e9d5;color:#346a42;padding:.3rem .65rem;border-radius:999px;font-size:.74rem;font-weight:750}
+    .discount-room .discount-status.is-exhausted{color:#836127;background:#fff4e2;border-color:#f3dfb9}
+    .discount-room .discount-offer{margin:1.3rem 0;display:flex;align-items:center;min-height:72px}
+    .discount-room .single-offer{display:flex;gap:.6rem;align-items:baseline}
+    .discount-room .offer-number{color:#164e5a;font-weight:850;font-size:clamp(2.1rem,4.6vw,3rem);line-height:1.05;letter-spacing:-.05em}
+    .discount-room .offer-off{font-size:1.05rem;font-weight:750;color:#60736e;letter-spacing:.06em}
+    .discount-room .offer-pair{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;width:100%}
+    .discount-room .offer-pair>div{display:flex;flex-direction:column;gap:.25rem}
+    .discount-room .offer-caption{font-size:.79rem;color:#66756e;font-weight:650}
+    .discount-room .discount-usage{background:#f6f8f6;border:1px solid #ebeeeb;padding:1rem 1.1rem;border-radius:13px;margin-bottom:1.25rem}
+    .discount-room .usage-summary{display:flex;justify-content:space-between;gap:1rem}
+    .discount-room .usage-summary>div{display:flex;flex-direction:column;gap:.15rem}
+    .discount-room .usage-right{text-align:right}
+    .discount-room .field-heading{display:block;font-size:.72rem;font-weight:650;color:#77817b;letter-spacing:.025em}
+    .discount-room .usage-summary strong{font-size:1rem;color:#253f41}
+    .discount-room .usage-track{background:#dce7e0;height:7px;margin-top:1rem;border-radius:99px;overflow:hidden}
+    .discount-room .usage-fill{height:100%;background:#318477;border-radius:99px;transition:width .2s ease}
+    .discount-room .discount-card-details{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:.95rem .8rem}
+    .discount-room .discount-card-details>div{min-width:0}
+    .discount-room .discount-card-details strong{display:block;margin-top:.25rem;font-size:.89rem;line-height:1.4;color:#374a45;font-weight:700;overflow-wrap:anywhere}
+    .discount-room .discount-card-details .details-full{grid-column:1/-1}
+    .discount-room .discount-empty{padding:2rem;background:#fff;border:1px dashed #d9d2c9;border-radius:18px;color:#6d756e;grid-column:1/-1;text-align:center}
+    .discount-room #login-message,.discount-room #create-message{color:#9d2929}
+    @media(max-width:760px){.discount-room .discount-list{grid-template-columns:1fr}.discount-room{margin:2rem auto}.discount-room .discount-card{padding:1.35rem}}
+    @media(max-width:600px){.discount-room .two-col{grid-template-columns:1fr}.discount-room .panel{padding:1rem}.discount-room .discount-card-header{gap:.65rem}.discount-room .discount-status{font-size:.7rem}}
   </style>
 </BaseLayout>
