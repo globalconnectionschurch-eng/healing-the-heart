@@ -7,7 +7,7 @@ export const prerender = false;
 export const GET: APIRoute = async ({ request }) => {
   if (!await isDiscountAdmin(request)) return json({ error: 'Unauthorized' }, 401);
   const { results } = await env.DB.prepare(
-    'SELECT d.id,d.code,d.percent_off,d.starts_at,d.expires_at,d.max_uses,d.used_count,d.created_at, g.second_percent_off, c.title AS class_title FROM discounts d LEFT JOIN group_discount_rules g ON g.discount_id=d.id LEFT JOIN classes c ON c.id=d.class_id WHERE d.active=1 AND (d.expires_at IS NULL OR d.expires_at>=?) ORDER BY d.created_at DESC'
+    'SELECT d.id,d.code,d.percent_off,d.starts_at,d.expires_at,d.max_uses,d.used_count,d.created_at, g.second_percent_off, c.title AS class_title,s.name AS student_name FROM discounts d LEFT JOIN group_discount_rules g ON g.discount_id=d.id LEFT JOIN classes c ON c.id=d.class_id LEFT JOIN students s ON s.id=d.student_id WHERE d.active=1 AND (d.expires_at IS NULL OR d.expires_at>=?) ORDER BY d.created_at DESC'
   ).bind(nowIso()).all();
   return json({ discounts: results ?? [] }, 200, { 'Cache-Control': 'no-store' });
 };

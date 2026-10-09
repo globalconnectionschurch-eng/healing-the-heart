@@ -24,8 +24,8 @@ async function ensureDiscountsTable() {
 export const GET: APIRoute = async ({ request }) => {
   if (!(await isAdminRequest(request))) return json({ error: 'Unauthorized' }, 401);
   await ensureDiscountsTable();
-  const { results } = await env.DB.prepare(`SELECT d.*,s.name AS student_name,s.email AS student_email,c.title AS class_title
-    FROM discounts d LEFT JOIN students s ON s.id=d.student_id LEFT JOIN classes c ON c.id=d.class_id
+  const { results } = await env.DB.prepare(`SELECT d.*,s.name AS student_name,s.email AS student_email,c.title AS class_title,g.second_percent_off
+    FROM discounts d LEFT JOIN students s ON s.id=d.student_id LEFT JOIN classes c ON c.id=d.class_id LEFT JOIN group_discount_rules g ON g.discount_id=d.id
     ORDER BY d.created_at DESC`).all<any>();
   return json({ discounts: results ?? [] });
 };
