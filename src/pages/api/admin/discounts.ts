@@ -63,10 +63,13 @@ export const PATCH: APIRoute = async ({ request }) => {
   const body = await request.json() as Record<string, any>;
   const id = String(body.id ?? '').trim();
   if (!id) return json({ error: 'Discount ID is required.' }, 400);
-  const percentOff = Number(body.percentOff);
+  const previous = await env.DB.prepare('SELECT percent_off,expires_at FROM discounts WHERE id=?').bind(id).first<any>();
+  if (!previous) return json({ error: 'Discount not found.' }, 404);
+  const percentOff = body.percentOff === undefined ? Number(previous.percent_off) : Number(body.percentOff);
   if (!Number.isInteger(percentOff) || percentOff < 1 || percentOff > 100) return json({ error: 'Percentage must be from 1 to 100.' }, 400);
+  const expiresAt = body.expiresAt === undefined ? previous.expires_at : (body.expiresAt || null);
   await env.DB.prepare(`UPDATE discounts SET active=?,percent_off=?,expires_at=?,updated_at=? WHERE id=?`).bind(
-    body.active === false ? 0 : 1, percentOff, body.expiresAt || null, nowIso(), id
+    body.active === false ? 0 : 1, percentOff, expiresAt, nowIso(), id
   ).run();
   return json({ ok: true });
 };

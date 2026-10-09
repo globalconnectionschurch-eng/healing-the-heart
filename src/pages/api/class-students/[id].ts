@@ -24,5 +24,8 @@ export const GET: APIRoute = async ({ request, params }) => {
     FROM registrations r JOIN students s ON s.id=r.student_id
     WHERE r.class_id=? AND r.status IN ('registered','pending_payment') ORDER BY s.name COLLATE NOCASE
   `).bind(classId).all();
+  if (!admin) for (const student of students ?? []) {
+    for (const privateField of ['address','date_of_birth','marital_status','diagnosis','learning_restrictions','adopted','major_trauma','grief','current_crisis','self_harm_history','goals','smoking_drinking','anything_else','verification_code']) delete (student as any)[privateField];
+  }
   return json({ class: { id: classRow.id, title: classRow.title, startDate: classRow.start_date, endDate: classRow.end_date, schedule: classRow.schedule, locationName: classRow.location_name, locationAddress: classRow.location_address }, students });
 };

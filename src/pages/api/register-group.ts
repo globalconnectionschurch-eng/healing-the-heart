@@ -46,7 +46,7 @@ export const POST: APIRoute = async ({ request }) => {
       if (Number(count?.n||0)+additions>Number(classRow.capacity)) return json({error:'Not enough seats remain for two attendees.'},409);
     }
     const code = String(body.code ?? '').trim().toUpperCase();
-    let discountId: string|null=null, firstPercent=0, secondPercent=0;
+    let discountId: string|null=null, firstPercent=0, secondPercent=0, groupCoupon=false;
     if (code) {
       const now=nowIso();
       const d = await env.DB.prepare(
@@ -56,6 +56,7 @@ export const POST: APIRoute = async ({ request }) => {
         return json({error:'That discount is not valid for these two attendees.'},400);
       }
       discountId=String(d.id);
+      groupCoupon=d.second_percent_off!=null;
       firstPercent=Number(d.percent_off);
       secondPercent=d.second_percent_off!=null?Number(d.second_percent_off):firstPercent;
     }
@@ -89,7 +90,7 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
     if(totalCents===0 && discountId){
-      const increment=firstPercent===secondPercent?2:1;
+      const increment=groupCoupon?1:2;
       statements.push(env.DB.prepare('UPDATE discounts SET used_count=used_count+?,updated_at=? WHERE id=? AND (max_uses IS NULL OR used_count+?<=max_uses)').bind(increment,now,discountId,increment));
     }
     await env.DB.batch(statements);
