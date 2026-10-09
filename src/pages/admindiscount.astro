@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { isDiscountAdmin } from '../lib/discount-admin';
+const signedIn = await isDiscountAdmin(Astro.request);
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+<BaseLayout title="Discount Management | Healing the Heart">
+  <main class="discount-room">
+    {signedIn ? (
+      <section id="dashboard">
+        <div class="heading"><div><p class="eyebrow">Healing the Heart</p><h1>Discounts</h1><p>Currently active discount codes</p></div><button id="logout" class="button outline" type="button">Sign out</button></div>
+        <div class="toolbar"><button id="open-create" class="button primary" type="button">+ Create New Discount</button></div>
+        <div id="discount-list" class="discount-list" aria-live="polite">Loading current discounts…</div>
+        <section id="create-panel" class="panel" hidden>
+          <div class="heading"><h2>New discount</h2><button id="cancel-create" type="button" class="button outline">Cancel</button></div>
+          <form id="discount-form">
+            <label>Discount code<input name="code" required minlength="3" placeholder="TOGETHER25" autocomplete="off" /></label>
+            <label>Discount type<select name="type" id="discount-type"><option value="single">Standard — one percentage per attendee</option><option value="group">Group — different percentage for each of two attendees</option></select></label>
+            <div class="two-col"><label id="first-label">Discount percentage<input name="firstPercent" type="number" min="1" max="100" value="25" required /></label><label id="second-wrap" hidden>Second attendee discount (%)<input name="secondPercent" type="number" min="1" max="100" value="50" /></label></div>
+            <div class="two-col"><label>Expiry (optional)<input name="expiresAt" type="datetime-local" /></label><label>Max uses (optional)<input name="maxUses" type="number" min="1" step="1" placeholder="Unlimited" /></label></div>
+            <p class="note" id="group-note" hidden>Group codes require two separate attendee forms and one combined payment. A use means one group checkout.</p>
+            <button class="button primary" type="submit">Save discount</button><p id="create-message" role="status"></p>
+          </form>
+        </section>
+      </section>
+    ) : (
+      <section id="login-panel" class="panel">
+        <p class="eyebrow">Healing the Heart</p><h1>Discount access</h1><p>Enter the discount management password to continue.</p>
+        <form id="login-form"><label>Password<input name="password" type="password" required autocomplete="current-password" /></label><button class="button primary" type="submit">Unlock discounts</button><p id="login-message" role="alert"></p></form>
+      </section>
+    )}
+  </main>
+  <script is:inline>
+    const $=id=>document.getElementById(id);
+    const escapeText=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const login=$('login-form');
+    if(login)login.addEventListener('submit',async event=>{event.preventDefault();const button=login.querySelector('button');button.disabled=true;const response=await fetch('/api/admindiscount/session',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:login.elements.password.value})});const data=await response.json();button.disabled=false;if(response.ok)location.reload();else $('login-message').textContent=data.error||'Could not sign in.';});
+    async function refresh(){const container=$('discount-list');if(!container)return;const response=await fetch('/api/admindiscount/codes',{cache:'no-store'});if(response.status===401){location.reload();return}if(!response.ok){container.textContent='Unable to load discounts.';return}const {discounts=[]}=await response.json();container.innerHTML=discounts.map(d=>'<div class="code-row"><div><strong>'+escapeText(d.code)+'</strong><small>'+(d.second_percent_off!=null?'Group: Person 1 '+d.percent_off+'% / Person 2 '+d.second_percent_off+'%':'Standard: '+d.percent_off+'% off')+'</small>'+(d.student_name?'<small>For '+escapeText(d.student_name)+'</small>':'')+'</div><div class="code-meta"><span>'+escapeText(d.class_title||'All classes')+'</span><span>Used '+Number(d.used_count||0)+(d.max_uses!=null?' / '+Number(d.max_uses):'')+'</span>'+(d.expires_at?'<span>Expires '+escapeText(d.expires_at.slice(0,10))+'</span>':'')+'</div></div>').join('')||'<p>No active discount codes.</p>';}
+    if($('dashboard')){
+      $('logout').addEventListener('click',async()=>{await fetch('/api/admindiscount/session',{method:'DELETE'});location.reload();});
+      $('open-create').addEventListener('click',()=>{$('create-panel').hidden=false;$('open-create').hidden=true;});
+      $('cancel-create').addEventListener('click',()=>{$('create-panel').hidden=true;$('open-create').hidden=false;});
+      const type=$('discount-type');
+      type.addEventListener('change',()=>{const group=type.value==='group';$('second-wrap').hidden=!group;$('group-note').hidden=!group;$('first-label').firstChild.textContent=group?'First attendee discount (%)':'Discount percentage';$('discount-form').elements.secondPercent.required=group;});
+      $('discount-form').addEventListener('submit',async event=>{event.preventDefault();const form=event.target;const submit=form.querySelector('button[type=submit]');submit.disabled=true;const data=Object.fromEntries(new FormData(form));if(data.expiresAt)data.expiresAt=new Date(data.expiresAt).toISOString();const response=await fetch('/api/admindiscount/codes',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});const result=await response.json();submit.disabled=false;if(!response.ok){$('create-message').textContent=result.error||'Unable to create discount.';return}form.reset();type.dispatchEvent(new Event('change'));$('create-message').textContent='';$('create-panel').hidden=true;$('open-create').hidden=false;refresh();});
+      refresh();
+    }
+  </script>
+  <style>
+    .discount-room [hidden]{display:none!important}.discount-room{max-width:920px;margin:3rem auto;padding:0 1.2rem;min-height:50vh}.discount-room .heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}.discount-room h1{margin:.2rem 0;font-size:clamp(2rem,5vw,3.2rem)}.discount-room h2{margin:0}.discount-room .toolbar{margin:1.8rem 0}.discount-room .panel{border:1px solid #e1ded8;border-radius:20px;padding:1.7rem;background:#fff;box-shadow:0 12px 40px #0000000b;margin:1.5rem 0}.discount-room #login-panel{max-width:500px;margin:5rem auto}.discount-room label{display:grid;gap:.4rem;font-weight:600;margin:1rem 0}.discount-room input,.discount-room select{width:100%;padding:.85rem;border:1px solid #d1cec7;border-radius:10px;font:inherit;box-sizing:border-box}.discount-room .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.discount-room .note{color:#555;font-size:.92rem}.discount-list{border:1px solid #e4e0da;border-radius:18px;background:#fff}.code-row{padding:1.15rem 1.4rem;display:flex;gap:1rem;justify-content:space-between;border-bottom:1px solid #eee}.code-row:last-child{border:0}.code-row strong{font-size:1.2rem}.code-row small{display:block;color:#697069;margin-top:.25rem}.code-meta{display:flex;flex-direction:column;gap:.1rem;text-align:right;color:#5b635d;font-size:.86rem}#login-message,#create-message{color:#9d2929}@media(max-width:600px){.discount-room .two-col{grid-template-columns:1fr}.code-row{flex-direction:column}.code-meta{text-align:left}.discount-room .panel{padding:1rem}}
+  </style>
+</BaseLayout>

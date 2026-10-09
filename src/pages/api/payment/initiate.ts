@@ -29,13 +29,13 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (discountCode) {
       const now = new Date().toISOString();
-      const discount = await env.DB.prepare(`SELECT id,percent_off,max_uses,used_count
-        FROM discounts
-        WHERE upper(code)=? AND (student_id IS NULL OR student_id=?) AND active=1
-          AND (starts_at IS NULL OR starts_at<=?)
-          AND (expires_at IS NULL OR expires_at>=?)
-          AND (class_id IS NULL OR class_id=?)
-          AND (max_uses IS NULL OR used_count<max_uses)
+      const discount = await env.DB.prepare(`SELECT d.id,d.percent_off,d.max_uses,d.used_count
+        FROM discounts d LEFT JOIN group_discount_rules g ON g.discount_id=d.id
+        WHERE upper(d.code)=? AND g.discount_id IS NULL AND (d.student_id IS NULL OR d.student_id=?) AND d.active=1
+          AND (d.starts_at IS NULL OR d.starts_at<=?)
+          AND (d.expires_at IS NULL OR d.expires_at>=?)
+          AND (d.class_id IS NULL OR d.class_id=?)
+          AND (d.max_uses IS NULL OR d.used_count<d.max_uses)
         LIMIT 1`).bind(discountCode, row.student_id, now, now, row.class_id).first<any>();
       if (!discount) return json({ error: 'That discount code is not valid for this attendee or class.' }, 400);
       discountId = String(discount.id);

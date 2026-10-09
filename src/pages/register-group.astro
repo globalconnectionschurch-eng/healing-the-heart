@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import GroupPersonForm from '../components/GroupPersonForm.astro';
+---
+<BaseLayout title="Register Two Attendees | Healing the Heart">
+  <section class="page-hero"><div class="page-hero-inner"><p class="eyebrow">One checkout · Two registrations</p><h1>Register together</h1><p>For couples, friends, or anyone attending the same class. Each person's answers stay in their own registration.</p></div></section>
+  <section class="section group-register">
+    <div class="shell">
+      <div class="steps" aria-label="Registration steps"><span class="current">1 · Class</span><span>2 · Attendee 1</span><span>3 · Attendee 2</span><span>4 · Checkout</span></div>
+      <form id="group-form" novalidate>
+        <input name="website" type="text" tabindex="-1" autocomplete="off" class="honeypot" aria-hidden="true" />
+        <fieldset data-step="1" class="screen">
+          <p class="eyebrow">Step 1 of 4</p><h2>Choose your class</h2>
+          <label>Class<select name="classId" required id="class-picker"><option value="">Loading classes…</option></select></label>
+          <p>You are registering two people in the same class. One person can complete both forms, with the other person's permission.</p>
+        </fieldset>
+        <fieldset data-step="2" class="screen" hidden><GroupPersonForm index={1} /></fieldset>
+        <fieldset data-step="3" class="screen" hidden><GroupPersonForm index={2} /></fieldset>
+        <fieldset data-step="4" class="screen" hidden>
+          <p class="eyebrow">Step 4 of 4</p><h2>Review and payment</h2>
+          <div id="summary" class="summary"></div>
+          <label>Discount code (optional)<input name="code" placeholder="Enter group or standard discount code" autocomplete="off" /></label>
+          <p class="note">Discounts are validated and applied before payment. If you use a group code, the first and second attendee percentages can be different.</p>
+          <p class="note">We save two separate attendee profiles and class registrations, but you pay once for both.</p>
+        </fieldset>
+        <div class="actions"><button id="back" class="button outline" type="button" hidden>Back</button><button id="next" class="button primary" type="button">Continue</button><button id="submit" class="button primary" type="submit" hidden>Register both attendees</button></div>
+        <p id="error-message" role="alert" class="error" hidden></p>
+      </form>
+      <section id="success" class="success" hidden><h2>Both registrations received</h2><p id="success-copy"></p><a id="pay-link" class="button primary" href="#">Pay together</a></section>
+    </div>
+  </section>
+  <script is:inline>
+    const form=document.getElementById('group-form'),stepSections=[...form.querySelectorAll('.screen')],indicators=[...document.querySelectorAll('.steps span')];
+    const $=id=>document.getElementById(id);let current=1,price=0;
+    const display=(step)=>{current=step;stepSections.forEach(s=>{s.hidden=Number(s.dataset.step)!==step});indicators.forEach((s,i)=>s.classList.toggle('current',i===step-1));$('back').hidden=step===1;$('next').hidden=step===4;$('submit').hidden=step!==4;$('error-message').hidden=true;window.scrollTo({top:document.querySelector('.group-register').offsetTop-80,behavior:'smooth'});};
+    const valid=()=>{const currentSection=stepSections[current-1];for(const el of currentSection.querySelectorAll('input,select,textarea'))if(!el.checkValidity()){el.reportValidity();return false}return true};
+    const keys=['name','email','phone','address','dateOfBirth','maritalStatus','church','srPastor','howHeard','goals','smokingDrinking','anythingElse','diagnosis','learningRestrictions','adopted','majorTrauma','grief','inMinistry','dietaryRestrictions','selfHarmHistory'];
+    const attendee=(n)=>{const data=new FormData(form),p={};for(const k of keys)p[k]=String(data.get('p'+n+'_'+k)||'').trim();p.currentCrisis=data.getAll('p'+n+'_currentCrisis').map(String);const other=String(data.get('p'+n+'_currentCrisisOther')||'').trim();if(other)p.currentCrisis.push('Other: '+other);return p;};
+    const refreshSummary=()=>{const p1=attendee(1),p2=attendee(2);$('summary').textContent=p1.name+' and '+p2.name+' · '+(price?'Base class cost: $'+(price*2).toFixed(2)+' for both (before discount)':'Free class');};
+    $('next').addEventListener('click',()=>{if(!valid())return;if(current===3){const a=attendee(1),b=attendee(2);if(a.email.toLowerCase()===b.email.toLowerCase()){$('error-message').hidden=false;$('error-message').textContent='Each attendee needs a different email address.';return}refreshSummary()}display(Math.min(4,current+1));});
+    $('back').addEventListener('click',()=>display(Math.max(1,current-1)));
+    form.addEventListener('submit',async event=>{event.preventDefault();if(!valid())return;const button=$('submit');button.disabled=true;button.textContent='Saving registrations…';$('error-message').hidden=true;try{const data=new FormData(form);const r=await fetch('/api/register-group',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({classId:data.get('classId'),code:data.get('code'),website:data.get('website'),people:[attendee(1),attendee(2)]})});const result=await r.json();if(!r.ok)throw new Error(result.error||'Unable to register both attendees.');form.hidden=true;$('success').hidden=false;$('pay-link').hidden=!result.paymentRequired;$('pay-link').href='/group-payment?group='+encodeURIComponent(result.groupId);$('success-copy').textContent=result.paymentRequired?'Both registrations are saved. Complete one secure payment for both people.':'Both registrations are confirmed. No payment is required.';}catch(err){$('error-message').textContent=err.message||'Unable to register.';$('error-message').hidden=false;}finally{button.disabled=false;button.textContent='Register both attendees';}});
+    (async()=>{try{const r=await fetch('/api/classes');const json=await r.json();const picker=$('class-picker');picker.innerHTML='<option value="">Select a class</option>';for(const c of json.classes||[]){const o=document.createElement('option');o.value=c.id;o.textContent=c.title+' · '+c.start_date+(c.price_cents?' · $'+(Number(c.price_cents)/100).toFixed(2)+' per person':'');o.dataset.price=Number(c.price_cents||0)/100;picker.appendChild(o);}picker.addEventListener('change',()=>price=Number(picker.selectedOptions[0]?.dataset.price||0));const requested=new URLSearchParams(location.search).get('classId');if(requested&&[...picker.options].some(o=>o.value===requested)){picker.value=requested;picker.dispatchEvent(new Event('change'));}}catch{$('class-picker').innerHTML='<option value="">Classes are temporarily unavailable</option>';}})();
+  </script>
+  <style>
+    .group-register{padding-top:2.5rem}.group-register [hidden]{display:none!important}.group-register .shell{max-width:840px;margin:auto}.group-register .steps{display:flex;justify-content:space-between;gap:.6rem;flex-wrap:wrap;margin-bottom:2rem;font-size:.9rem}.steps span{padding:.6rem .8rem;background:#f4f1eb;border-radius:8px;color:#626c64}.steps span.current{background:#163f51;color:#fff}.screen{border:0;padding:0;margin:0}.screen[hidden]{display:none!important}.group-register h2{font-size:clamp(1.9rem,4vw,2.7rem);margin:.25rem 0 1rem}.attendee-form h3{margin:2rem 0 .4rem}.attendee-form .supporting,.group-register .note{color:#646b64;font-size:.91rem}.group-register label{display:grid;gap:.45rem;margin:1.25rem 0;font-weight:600}.group-register input,.group-register textarea,.group-register select{box-sizing:border-box;padding:.85rem 1rem;border:1px solid #d2d0c9;border-radius:12px;background:#fff;width:100%;font:inherit;font-weight:400}.group-register textarea{min-height:100px;resize:vertical}.group-register .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}.field-grid .full{grid-column:1/-1}.group-register .crisis-box{padding:1rem;border:1px solid #e0dad2;border-radius:14px}.group-register .check{display:flex;align-items:center;gap:.8rem;margin:.65rem 0}.group-register .check input{width:auto}.group-register .actions{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid #e0ddd6;padding-top:1.5rem;margin-top:1.8rem}.group-register #next,.group-register #submit{margin-left:auto}.group-register .summary{font-weight:700;font-size:1.1rem;padding:1.4rem;background:#f5f2ed;border-radius:14px}.group-register .error{color:#a12727;padding:1rem;border:1px solid #dc9b9b;border-radius:8px}.group-register .success{padding:2rem;border:1px solid #ced6cd;border-radius:20px}.group-register .honeypot{position:absolute;left:-9999px}@media(max-width:650px){.group-register .field-grid{grid-template-columns:1fr}.field-grid .full{grid-column:auto}.group-register .steps{font-size:.75rem}}
+  </style>
+</BaseLayout>

@@ -24,8 +24,8 @@ async function ensureDiscountsTable() {
 export const GET: APIRoute = async ({ request }) => {
   if (!(await isAdminRequest(request))) return json({ error: 'Unauthorized' }, 401);
   await ensureDiscountsTable();
-  const { results } = await env.DB.prepare(`SELECT d.*,s.name AS student_name,s.email AS student_email,c.title AS class_title
-    FROM discounts d LEFT JOIN students s ON s.id=d.student_id LEFT JOIN classes c ON c.id=d.class_id
+  const { results } = await env.DB.prepare(`SELECT d.*,s.name AS student_name,s.email AS student_email,c.title AS class_title,g.second_percent_off
+    FROM discounts d LEFT JOIN students s ON s.id=d.student_id LEFT JOIN classes c ON c.id=d.class_id LEFT JOIN group_discount_rules g ON g.discount_id=d.id
     ORDER BY d.created_at DESC`).all<any>();
   return json({ discounts: results ?? [] });
 };
@@ -63,10 +63,13 @@ export const PATCH: APIRoute = async ({ request }) => {
   const body = await request.json() as Record<string, any>;
   const id = String(body.id ?? '').trim();
   if (!id) return json({ error: 'Discount ID is required.' }, 400);
-  const percentOff = Number(body.percentOff);
+  const previous = await env.DB.prepare('SELECT percent_off,expires_at FROM discounts WHERE id=?').bind(id).first<any>();
+  if (!previous) return json({ error: 'Discount not found.' }, 404);
+  const percentOff = body.percentOff === undefined ? Number(previous.percent_off) : Number(body.percentOff);
   if (!Number.isInteger(percentOff) || percentOff < 1 || percentOff > 100) return json({ error: 'Percentage must be from 1 to 100.' }, 400);
+  const expiresAt = body.expiresAt === undefined ? previous.expires_at : (body.expiresAt || null);
   await env.DB.prepare(`UPDATE discounts SET active=?,percent_off=?,expires_at=?,updated_at=? WHERE id=?`).bind(
-    body.active === false ? 0 : 1, percentOff, body.expiresAt || null, nowIso(), id
+    body.active === false ? 0 : 1, percentOff, expiresAt, nowIso(), id
   ).run();
   return json({ ok: true });
 };

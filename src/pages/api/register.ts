@@ -37,7 +37,8 @@ export const POST: APIRoute = async ({ request }) => {
 
   const existing = await env.DB.prepare('SELECT id FROM students WHERE lower(email)=?').bind(email).first<{id:string}>();
   const actualStudentId = existing?.id ?? `student_${crypto.randomUUID()}`;
-  const existingRegistration = await env.DB.prepare('SELECT id,source,verification_code,payment_status FROM registrations WHERE class_id=? AND student_id=?').bind(classId, actualStudentId).first<any>();
+  const existingRegistration = await env.DB.prepare('SELECT id,source,verification_code,payment_status,group_id FROM registrations WHERE class_id=? AND student_id=?').bind(classId, actualStudentId).first<any>();
+  if (existingRegistration?.payment_status === 'paid' || existingRegistration?.group_id) return new Response(JSON.stringify({ok:false,error:'This attendee is already registered for this class.'}), {status:409,headers:{'content-type':'application/json'}});
   if (classRow.capacity && !existingRegistration) {
     const count = await env.DB.prepare(`SELECT COUNT(*) AS count FROM registrations WHERE class_id=? AND status IN ('registered','pending_payment')`).bind(classId).first<{count:number}>();
     if ((count?.count ?? 0) >= Number(classRow.capacity)) return new Response(JSON.stringify({ ok: false, error: 'That class is currently full.' }), { status: 409, headers: { 'content-type': 'application/json; charset=utf-8' } });
@@ -60,12 +61,12 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   if (verificationCode) {
-    const discount = await env.DB.prepare(`SELECT id FROM discounts
-      WHERE upper(code)=? AND (student_id IS NULL OR student_id=?) AND active=1
-        AND (starts_at IS NULL OR starts_at<=?)
-        AND (expires_at IS NULL OR expires_at>=?)
-        AND (class_id IS NULL OR class_id=?)
-        AND (max_uses IS NULL OR used_count<max_uses)
+    const discount = await env.DB.prepare(`SELECT d.id FROM discounts d LEFT JOIN group_discount_rules g ON g.discount_id=d.id
+      WHERE upper(d.code)=? AND g.discount_id IS NULL AND (d.student_id IS NULL OR d.student_id=?) AND d.active=1
+        AND (d.starts_at IS NULL OR d.starts_at<=?)
+        AND (d.expires_at IS NULL OR d.expires_at>=?)
+        AND (d.class_id IS NULL OR d.class_id=?)
+        AND (d.max_uses IS NULL OR d.used_count<d.max_uses)
       LIMIT 1`).bind(verificationCode, actualStudentId, now, now, classId).first<{id:string}>();
     if (!discount) return new Response(JSON.stringify({ ok: false, error: 'That discount code is not valid for this attendee or class.' }), { status: 400, headers: { 'content-type': 'application/json; charset=utf-8' } });
   }
