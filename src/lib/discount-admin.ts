@@ -21,11 +21,12 @@ async function sha256(value: string): Promise<Uint8Array> {
   return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
 }
 export async function checkDiscountPassword(candidate: string): Promise<boolean> {
-  const expected = String((env as any).DISCOUNT_ADMIN_PASSWORD ?? '');
-  if (!expected) return false;
-  const [a, b] = await Promise.all([sha256(candidate), sha256(expected)]);
+  const expectedHex = String((env as any).DISCOUNT_ADMIN_PASSWORD_HASH ?? '').trim().toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(expectedHex)) return false;
+  const digest = await sha256(candidate);
+  const expected = Uint8Array.from(expectedHex.match(/.{2}/g)!, piece => parseInt(piece, 16));
   let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  for (let i = 0; i < digest.length; i++) diff |= digest[i] ^ expected[i];
   return diff === 0;
 }
 export async function discountSessionCookie(): Promise<string> {
