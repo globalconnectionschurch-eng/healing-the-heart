@@ -1,0 +1,38 @@
+---
+const { index } = Astro.props;
+const pre = 'p' + index + '_';
+---
+<div class="attendee-form">
+  <div class="step-intro"><p class="eyebrow">Attendee {index} of 2</p><h2>{index===1?'First attendee':'Second attendee'}</h2><p>Each attendee has their own private registration and answers.</p></div>
+  <div class="field-grid">
+    <label>Full name<input name={pre+'name'} required autocomplete="off" /></label>
+    <label>Email address<input name={pre+'email'} type="email" required autocomplete="off" /></label>
+    <label>Phone<input name={pre+'phone'} type="tel" autocomplete="off" /></label>
+    <label>Date of birth<input name={pre+'dateOfBirth'} type="date" /></label>
+    <label class="full">Address<input name={pre+'address'} /></label>
+    <label>Marital status<select name={pre+'maritalStatus'}><option value="">Select an option</option><option>Single</option><option>Married</option><option>Separated</option><option>Divorced</option><option>Widowed</option><option>Prefer not to say</option></select></label>
+    <label>Church you attend / serve at<input name={pre+'church'} /></label>
+    <label class="full">Senior pastor (clergy # if applicable)<input name={pre+'srPastor'} /></label>
+  </div>
+  <h3>Your healing journey</h3>
+  <p class="supporting">Only share what you're comfortable sharing. These answers belong to this attendee, not the other person.</p>
+  <label>How did you hear about Healing the Heart?<input name={pre+'howHeard'} /></label>
+  <label>What do you hope to gain from this course?<textarea name={pre+'goals'}></textarea></label>
+  <label>Do you have any diagnosis?<textarea name={pre+'diagnosis'}></textarea></label>
+  <label>Do you have any learning restrictions?<textarea name={pre+'learningRestrictions'}></textarea></label>
+  <label>Are you adopted?<select name={pre+'adopted'}><option value="">Select</option><option>Yes</option><option>No</option><option>Prefer not to say</option></select></label>
+  <label>Is there any major trauma that you've been through?<textarea name={pre+'majorTrauma'}></textarea></label>
+  <label>Have you lost somebody recently or are you grieving something specific?<textarea name={pre+'grief'}></textarea></label>
+  <label>Are you in ministry?<select name={pre+'inMinistry'}><option value="">Select</option><option>Yes</option><option>No</option><option>Prefer not to say</option></select></label>
+  <label>Dietary restrictions or food allergies<textarea name={pre+'dietaryRestrictions'}></textarea></label>
+  <fieldset class="crisis-box"><legend>Current crisis (select any)</legend>
+    <label class="check"><input name={pre+'currentCrisis'} type="checkbox" value="Marriage problems" /> Marriage problems</label>
+    <label class="check"><input name={pre+'currentCrisis'} type="checkbox" value="Alcohol addiction" /> Alcohol addiction</label>
+    <label class="check"><input name={pre+'currentCrisis'} type="checkbox" value="Porn addiction" /> Porn addiction</label>
+    <label class="check"><input name={pre+'currentCrisis'} type="checkbox" value="Grieving the loss of a family member" /> Grieving loss</label>
+    <label>Other crisis<textarea name={pre+'currentCrisisOther'}></textarea></label>
+  </fieldset>
+  <label>Have you ever considered any type of self-harm?<select name={pre+'selfHarmHistory'}><option value="">Select</option><option>Yes</option><option>No</option><option>Prefer not to say</option></select></label>
+  <label>Smoking or drinking concerns<textarea name={pre+'smokingDrinking'}></textarea></label>
+  <label>Anything else you would like us to know?<textarea name={pre+'anythingElse'}></textarea></label>
+</div>

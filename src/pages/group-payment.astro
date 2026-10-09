@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+const groupId = Astro.url.searchParams.get('group') || '';
+---
+<BaseLayout title="Group Checkout | Healing the Heart">
+  <section class="page-hero"><div class="page-hero-inner"><p class="eyebrow">Healing the Heart</p><h1>Complete group payment</h1><p>One secure Moneris payment for two separate class registrations.</p></div></section>
+  <main class="group-payment">
+    <div id="loading">Preparing secure checkout…</div>
+    <div id="checkout" hidden><h2 id="class-title"></h2><p>Two attendees · One checkout</p><p id="price"></p><div id="monerisCheckout"></div></div>
+    <div id="success" hidden><h2>Payment received</h2><p>Both registrations are now confirmed.</p><a class="button primary" href="/">Return home</a></div>
+    <div id="error" hidden><h2>Payment needs attention</h2><p id="error-text"></p><a class="button outline" href="/contact">Contact us</a></div>
+  </main>
+  <script is:inline define:vars={{ groupId }}>
+    const $=id=>document.getElementById(id);
+    const fail=msg=>{$('loading').hidden=true;$('checkout').hidden=true;$('error').hidden=false;$('error-text').textContent=msg;};
+    const complete=()=>{$('loading').hidden=true;$('checkout').hidden=true;$('success').hidden=false;};
+    async function start(){
+      if(!groupId)return fail('Your group payment link is incomplete.');
+      try{
+        const r=await fetch('/api/payment/group-initiate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({groupId})});
+        const data=await r.json();if(!r.ok)return fail(data.error||'Unable to start checkout.');
+        if(data.alreadyPaid)return complete();
+        $('class-title').textContent=data.classTitle||'Class registration';
+        $('price').textContent='Total for both: $'+data.amount+' CAD'+(Number(data.originalAmount)>Number(data.amount)?' (before discount $'+data.originalAmount+')':'');
+        $('loading').hidden=true;$('checkout').hidden=false;
+        const script=document.createElement('script');script.src=data.environment==='prod'?'https://gateway.moneris.com/chktv2/js/chkt_v3.00.js':'https://gatewayt.moneris.com/chktv2/js/chkt_v3.00.js';
+        script.onerror=()=>fail('Could not load secure payment.');
+        script.onload=()=>{
+          const checkout=new window.monerisCheckout();
+          checkout.setMode(data.environment);checkout.setCheckoutDiv('monerisCheckout');
+          checkout.setCallback('cancel_transaction',()=>checkout.closeCheckout());
+          checkout.setCallback('error_event',()=>fail('Moneris reported a payment error.'));
+          checkout.setCallback('payment_complete',async raw=>{
+            let cb={};try{cb=typeof raw==='string'?JSON.parse(raw):raw;}catch{}
+            checkout.closeCheckout();
+            const confirmation=await fetch('/api/payment/group-complete',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({groupId,ticket:cb?.ticket||data.ticket})});
+            const result=await confirmation.json();
+            if(!confirmation.ok||!result.paid)return fail(result.error||'Payment could not be verified. Contact us before paying again.');
+            complete();
+          });
+          checkout.startCheckout(data.ticket);
+        };
+        document.head.appendChild(script);
+      }catch{fail('Unable to contact secure payment service.')}
+    }
+    start();
+  </script>
+  <style>.group-payment{max-width:760px;margin:2rem auto;padding:2rem;border:1px solid #ddd;border-radius:20px;min-height:240px}.group-payment #price{font-size:1.5rem;font-weight:700}</style>
+</BaseLayout>
