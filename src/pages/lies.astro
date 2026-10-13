@@ -15,7 +15,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <section id="panel-instructions" class="tools-panel active" role="tabpanel" data-panel="instructions">
       <div class="instructions-hero">
         <p class="eyebrow">Start here</p>
-        <h1>Understand the trigger. Discover the need. Find healing.</h1>
+        <h1><span>Understand the trigger.</span><span>Discover the need.</span><span>Find healing.</span></h1>
         <p>Pain often shows up first as a reaction—a moment that hurt, frustrated, angered, embarrassed, or triggered us. You do not have to know the lie underneath it yet. Start with what happened, and this tool will help you explore what may have been touched, what emotional need may be underneath it, and where truth and healing can begin.</p>
       </div>
 
@@ -397,6 +397,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .tools-panel[hidden]{display:none!important}
     .instructions-hero{max-width:860px;margin-bottom:2.4rem}
     .instructions-hero h1,.tool-intro h1,.feelings-intro h1{font-size:clamp(3rem,7vw,6rem);margin:.2rem 0 1.1rem}
+    /* Keep the three opening statements aligned instead of splitting mid-thought. */
+    .instructions-hero h1{font-size:clamp(2rem,8.1vw,4.4rem);line-height:1.07;letter-spacing:-.04em;text-align:left}
+    .instructions-hero h1 span{display:block;text-wrap:balance}
     .instructions-hero>p:last-child,.tool-intro>div:first-child>p:last-child,.feelings-intro>p:last-child{color:var(--muted);font-size:1.08rem;max-width:800px}
     .instructions-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:1rem;align-items:stretch}
     .instructions-card,.prayer-card,.tips-card,.facilitator-card,.wheel-card,.input-card,.result-card,.email-card{border:1px solid rgba(32,37,34,.1);border-radius:24px}
