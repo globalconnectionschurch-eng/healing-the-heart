@@ -14,7 +14,7 @@ export const POST: APIRoute = async ({ request }) => {
   if (!student) return json({ error: 'Attendee not found.' }, 404);
   if (!student.email || !String(student.email).trim()) return json({ error: 'This attendee does not have an email address.' }, 400);
 
-  const latest = await env.DB.prepare(`SELECT c.* FROM registrations r JOIN classes c ON c.id=r.class_id WHERE r.student_id=? ORDER BY r.registered_at DESC LIMIT 1`).bind(studentId).first<any>();
+  const latest = await env.DB.prepare(`SELECT c.* FROM registrations r JOIN classes c ON c.id=r.class_id WHERE r.student_id=? AND r.status IN ('registered','pending_payment') ORDER BY r.registered_at DESC LIMIT 1`).bind(studentId).first<any>();
   const template = data.templateId
     ? await env.DB.prepare('SELECT * FROM email_templates WHERE id=?').bind(data.templateId).first<any>() ?? emailTemplates.find((item) => item.id === data.templateId)
     : null;
