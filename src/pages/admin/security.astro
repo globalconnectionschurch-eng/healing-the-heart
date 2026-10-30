@@ -1,0 +1,56 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { isAdminRequest } from '../../lib/server';
+if (!(await isAdminRequest(Astro.request))) return Astro.redirect('/admin-login');
+---
+<BaseLayout title="Security | Healing the Heart Admin">
+  <section class="admin-shell">
+    <div class="admin-header">
+      <div><p class="eyebrow">Admin · Security</p><h1>Security</h1><p>Manage the password used to access the administration dashboard.</p></div>
+      <a class="button outline" href="/admin">← Dashboard</a>
+    </div>
+    <nav class="admin-menu" aria-label="Admin menu">
+      <a href="/admin">Dashboard</a><a href="/admin/classes">Classes</a><a href="/admin/registrations">Registrations</a><a href="/admin/attendees">Attendee Directory</a><a href="/admin/blast-email">Blast Email</a><a href="/admin/templates">Email Templates</a><a href="/admin/email-history">Email History</a><a href="/admin/security" aria-current="page">Security</a>
+    </nav>
+    <section class="admin-section admin-password-settings">
+      <div class="admin-section-title">
+        <div><p class="eyebrow">Account protection</p><h2>Administration password</h2><p>Change the password used to sign in to the Healing the Heart admin area.</p></div>
+        <span class="status-pill">Protected</span>
+      </div>
+      <form class="admin-form" id="admin-password-form">
+        <div class="form-grid">
+          <label>Current password<input name="currentPassword" type="password" autocomplete="current-password" required /></label>
+          <label>New password<input name="newPassword" type="password" autocomplete="new-password" minlength="12" required /><small class="field-note">Use at least 12 characters.</small></label>
+        </div>
+        <label>Confirm new password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="12" required /></label>
+        <div class="actions left"><button class="button primary" type="submit">Change admin password</button></div>
+        <p class="field-note" id="admin-password-result" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </section>
+  <script is:inline>
+    const form = document.getElementById('admin-password-form');
+    const result = document.getElementById('admin-password-result');
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      result.textContent = 'Saving…';
+      try {
+        const response = await fetch('/api/admin/password', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(Object.fromEntries(new FormData(form)))
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Unable to change the password.');
+        form.reset();
+        result.textContent = 'Password changed successfully.';
+      } catch (error) {
+        result.textContent = error instanceof Error ? error.message : 'Unable to change the password.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</BaseLayout>
