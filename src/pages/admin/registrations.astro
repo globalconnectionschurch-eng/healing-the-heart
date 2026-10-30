@@ -6,7 +6,7 @@ if (!(await isAdminRequest(Astro.request))) return Astro.redirect('/admin-login'
 <BaseLayout title="Registrations | Healing the Heart Admin">
   <section class="admin-shell" id="admin-root">
     <div class="admin-header"><div><p class="eyebrow">Admin · Registrations</p><h1>Registrations</h1><p>Manage class rosters, add students, and send class communication from one focused workspace.</p></div><a class="button outline" href="/admin">← Dashboard</a></div>
-    <nav class="admin-menu" aria-label="Admin menu"><a href="/admin">Dashboard</a><a href="/admin/classes">Classes</a><a href="/admin/registrations" aria-current="page">Registrations</a><a href="/admin/attendees">Attendee Directory</a><a href="/admin/blast-email">Blast Email</a><a href="/admin/templates">Email Templates</a><a href="/admin/email-history">Email History</a></nav>
+    <nav class="admin-menu" aria-label="Admin menu"><a href="/admin">Dashboard</a><a href="/admin/classes">Classes</a><a href="/admin/registrations" aria-current="page">Registrations</a><a href="/admin/attendees">Attendee Directory</a><a href="/admin/blast-email">Blast Email</a><a href="/admin/templates">Email Templates</a><a href="/admin/email-history">Email History</a><a href="/admin/security">Security</a></nav>
 
     <section class="admin-section registration-picker-section">
       <div class="admin-section-title"><div><p class="eyebrow">Roster</p><h2>Select a class</h2><p>Choose the class you want to manage.</p></div><span id="count" class="status-pill">0 students</span></div>
