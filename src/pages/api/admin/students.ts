@@ -63,7 +63,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   if (q) {
     const pattern = `%${q}%`;
     const { results } = await env.DB.prepare(`
-      SELECT s.*, COUNT(r.id) AS registration_count, MAX(r.registered_at) AS last_registered_at
+      SELECT s.*, COUNT(CASE WHEN r.status IN ('registered','pending_payment') THEN 1 END) AS registration_count, MAX(CASE WHEN r.status IN ('registered','pending_payment') THEN r.registered_at END) AS last_registered_at
       FROM students s LEFT JOIN registrations r ON r.student_id=s.id
       WHERE s.name LIKE ? OR s.email LIKE ? OR COALESCE(s.phone,'') LIKE ?
       GROUP BY s.id ORDER BY s.name COLLATE NOCASE ASC LIMIT 500
@@ -73,7 +73,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   const classId = url.searchParams.get('classId');
   if (!classId) return json({ students: [] });
   const { results } = await env.DB.prepare(`SELECT s.*, r.id AS registration_id, r.source, r.payment_status, r.status, r.registered_at, r.verification_code
-    FROM registrations r JOIN students s ON s.id=r.student_id WHERE r.class_id=? ORDER BY s.name`).bind(classId).all();
+    FROM registrations r JOIN students s ON s.id=r.student_id WHERE r.class_id=? AND r.status IN ('registered','pending_payment') ORDER BY s.name`).bind(classId).all();
   return json({ students: results });
 };
 
