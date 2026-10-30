@@ -46,7 +46,7 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ ok: false, error: 'Moneris did not approve the payment. Please try again or contact us.' }, 402);
     }
 
-    const updateResult = await env.DB.prepare(`UPDATE registrations SET payment_status='paid',status='registered',payment_transaction_id=?,paid_at=?,payment_error=NULL WHERE id=? AND payment_status!='paid'`).bind(transactionId, now, registrationId).run();
+    const updateResult = await env.DB.prepare(`UPDATE registrations SET payment_status='paid',status=CASE WHEN status='cancelled' THEN 'cancelled' ELSE 'registered' END,payment_transaction_id=?,paid_at=?,payment_error=NULL WHERE id=? AND payment_status!='paid'`).bind(transactionId, now, registrationId).run();
     if (Number(updateResult.meta?.changes ?? 0) > 0 && row.discount_id) {
       await env.DB.prepare('UPDATE discounts SET used_count=used_count+1,updated_at=? WHERE id=? AND (max_uses IS NULL OR used_count<max_uses)').bind(now, row.discount_id).run();
     }
