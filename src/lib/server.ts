@@ -81,6 +81,27 @@ export async function verifyClassPassword(password: string, stored: string) {
   }
 }
 
+// One protected roster password applies to every existing and future class.
+// The original configured retreat password is the migration source until the
+// shared setting is explicitly changed; no password is stored in source code.
+export async function getSharedRosterPasswordHash(): Promise<string | null> {
+  const saved = await env.DB.prepare("SELECT value FROM admin_settings WHERE key='shared_roster_password_hash'")
+    .first<{ value: string }>();
+  if (saved?.value) return saved.value;
+  const original = await env.DB.prepare(
+    'SELECT student_link_password_hash FROM classes WHERE id=?'
+  ).bind('class_e626adce-6aee-4256-97ca-b4219d14d0fc')
+    .first<{ student_link_password_hash: string | null }>();
+  return original?.student_link_password_hash ?? null;
+}
+
+export async function setSharedRosterPasswordHash(passwordHash: string) {
+  await env.DB.prepare(
+    "INSERT INTO admin_settings (key,value) VALUES ('shared_roster_password_hash',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value"
+  ).bind(passwordHash).run();
+  await env.DB.prepare('UPDATE classes SET student_link_password_hash=?').bind(passwordHash).run();
+}
+
 export async function hashAdminPassword(password: string) {
   return hashClassPassword(password);
 }
