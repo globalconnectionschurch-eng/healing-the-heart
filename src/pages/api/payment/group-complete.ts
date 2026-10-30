@@ -30,7 +30,7 @@ export const POST: APIRoute = async ({request})=>{
     // D1 batch makes the group and its two personal registrations atomic.
     const statements=[
       env.DB.prepare("UPDATE registration_groups SET status='paid',payment_transaction_id=?,paid_at=?,payment_error=NULL WHERE id=? AND status='pending'").bind(transactionId,now,groupId),
-      env.DB.prepare("UPDATE registrations SET payment_status='paid',status='registered',payment_transaction_id=?,paid_at=?,payment_error=NULL WHERE group_id=? AND payment_status!='paid'").bind(transactionId,now,groupId)
+      env.DB.prepare("UPDATE registrations SET payment_status='paid',status=CASE WHEN status='cancelled' THEN 'cancelled' ELSE 'registered' END,payment_transaction_id=?,paid_at=?,payment_error=NULL WHERE group_id=? AND payment_status!='paid'").bind(transactionId,now,groupId)
     ];
     if(group.discount_id){
       const rule=await env.DB.prepare('SELECT second_percent_off FROM group_discount_rules WHERE discount_id=?').bind(group.discount_id).first<any>();
