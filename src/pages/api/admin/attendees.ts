@@ -18,7 +18,7 @@ export const GET: APIRoute=async({request,url})=>{
   if(!(await isAdminRequest(request)))return json({error:'Unauthorized'},401);
   await ensureProfileColumns();
   const q=`%${(url.searchParams.get('q')||'').trim()}%`;
-  const {results}=await env.DB.prepare(`SELECT s.*,COUNT(r.id) registration_count,MAX(r.registered_at) last_registered_at FROM students s LEFT JOIN registrations r ON r.student_id=s.id WHERE s.name LIKE ? OR s.email LIKE ? OR COALESCE(s.phone,'') LIKE ? GROUP BY s.id ORDER BY s.name COLLATE NOCASE LIMIT 500`).bind(q,q,q).all<any>();
+  const {results}=await env.DB.prepare(`SELECT s.*,COUNT(CASE WHEN r.status IN ('registered','pending_payment') THEN 1 END) registration_count,MAX(CASE WHEN r.status IN ('registered','pending_payment') THEN r.registered_at END) last_registered_at FROM students s LEFT JOIN registrations r ON r.student_id=s.id WHERE s.name LIKE ? OR s.email LIKE ? OR COALESCE(s.phone,'') LIKE ? GROUP BY s.id ORDER BY s.name COLLATE NOCASE LIMIT 500`).bind(q,q,q).all<any>();
   return json({students:results});
 };
 
