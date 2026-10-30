@@ -20,12 +20,12 @@ export const GET: APIRoute = async ({ request, params }) => {
   const { results: students } = await env.DB.prepare(`
     SELECT s.name,s.email,s.phone,s.address,s.date_of_birth,s.marital_status,s.church,s.sr_pastor,s.how_heard,s.goals,s.smoking_drinking,s.anything_else,
            s.diagnosis,s.learning_restrictions,s.adopted,s.major_trauma,s.grief,s.in_ministry,s.dietary_restrictions,s.current_crisis,s.self_harm_history,
-           r.source,r.payment_status,r.status,r.registered_at,r.verification_code
+           r.id AS registration_id,r.source,r.payment_status,r.status,r.registered_at,r.verification_code
     FROM registrations r JOIN students s ON s.id=r.student_id
     WHERE r.class_id=? AND r.status IN ('registered','pending_payment') ORDER BY s.name COLLATE NOCASE
   `).bind(classId).all();
   if (!admin) for (const student of students ?? []) {
-    for (const privateField of ['address','date_of_birth','marital_status','diagnosis','learning_restrictions','adopted','major_trauma','grief','current_crisis','self_harm_history','goals','smoking_drinking','anything_else','verification_code']) delete (student as any)[privateField];
+    for (const privateField of ['registration_id','address','date_of_birth','marital_status','diagnosis','learning_restrictions','adopted','major_trauma','grief','current_crisis','self_harm_history','goals','smoking_drinking','anything_else','verification_code']) delete (student as any)[privateField];
   }
   return json({ class: { id: classRow.id, title: classRow.title, startDate: classRow.start_date, endDate: classRow.end_date, schedule: classRow.schedule, locationName: classRow.location_name, locationAddress: classRow.location_address }, students });
 };
