@@ -76,7 +76,7 @@ const { backHref = '/admin', backLabel = 'Dashboard', portal = 'Administration' 
         <label>When to use (optional) <input id="template-trigger"></label>
         <label>Subject <input id="template-subject" required maxlength="180"></label>
         <label>Message <textarea id="template-body" rows="11" required maxlength="30000"></textarea></label>
-        <p class="field-note">Class placeholders supported: {{firstName}}, {{classTitle}}, {{dateRange}}, {{schedule}}, {{classTime}}, {{locationName}}.</p>
+        <p class="field-note">Class placeholders supported: &#123;&#123;firstName&#125;&#125;, &#123;&#123;classTitle&#125;&#125;, &#123;&#123;dateRange&#125;&#125;, &#123;&#123;schedule&#125;&#125;, &#123;&#123;classTime&#125;&#125;, &#123;&#123;locationName&#125;&#125;.</p>
         <button id="template-save" class="button primary" type="submit">Save Template</button>
         <p id="template-status" class="field-note" role="status" aria-live="polite"></p>
       </form>
