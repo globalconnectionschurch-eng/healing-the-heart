@@ -1,0 +1,10 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EmailWorkspace from '../../components/EmailWorkspace.astro';
+import { isDiscountAdmin } from '../../lib/discount-admin';
+if (!(await isDiscountAdmin(Astro.request))) return Astro.redirect('/admindiscount');
+Astro.response.headers.set('Cache-Control','no-store');
+---
+<BaseLayout title="Email | Healing the Heart Staff Portal">
+  <EmailWorkspace portal="Staff Portal" backHref="/admindiscount" backLabel="Discounts" />
+</BaseLayout>
