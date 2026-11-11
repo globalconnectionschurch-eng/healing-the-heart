@@ -174,7 +174,7 @@ export function fillTemplate(template: string, values: Record<string, string | n
   return template.replace(/{{\s*([a-zA-Z0-9_]+)\s*}}/g, (_, key) => String(values[key] ?? ''));
 }
 
-export async function sendEmail(to: string, subject: string, text: string) {
+export async function sendEmail(to: string, subject: string, text: string, recipients?: { to?: string[]; cc?: string[]; bcc?: string[] }) {
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) return { sent: false, error: 'RESEND_API_KEY is not configured.' };
 
@@ -189,7 +189,7 @@ export async function sendEmail(to: string, subject: string, text: string) {
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from: fromEmail, to: [to], subject, text, html: renderEmailHtml(text) })
+    body: JSON.stringify({ from: fromEmail, to: recipients?.to?.length ? recipients.to : [to], ...(recipients?.cc?.length ? { cc: recipients.cc } : {}), ...(recipients?.bcc?.length ? { bcc: recipients.bcc } : {}), subject, text, html: renderEmailHtml(text) })
   });
   const data = await response.json() as { id?: string; message?: string };
   if (!response.ok) return { sent: false, error: data.message ?? 'Email provider rejected the message.' };
