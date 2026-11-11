@@ -18,6 +18,12 @@ if (!(await isAdminRequest(Astro.request))) return Astro.redirect('/admin-login'
       <div><strong>Healing the Heart &lt;info@healingtheheart.ca&gt;</strong><small>Replies are forwarded to healingtheheartca@gmail.com</small></div>
     </div>
 
+    <section class="admin-section" aria-labelledby="test-mail-heading">
+      <div class="admin-section-title"><div><p class="eyebrow">Delivery check</p><h2 id="test-mail-heading">Test outgoing email</h2><p>Send one test message to healingtheheartca@gmail.com and confirm it arrives from info@healingtheheart.ca.</p></div></div>
+      <button id="test-email-button" class="button outline" type="button">Send test email</button>
+      <p class="field-note" id="test-email-result" aria-live="polite" role="status"></p>
+    </section>
+
     <section class="admin-section">
       <div class="admin-section-title"><div><p class="eyebrow">Welcome &amp; class messages</p><h2>Send a saved email to a class</h2><p>Choose a class and a saved welcome or follow-up template. Only registered students receive this message.</p></div></div>
       <form id="class-mail-form" class="admin-form">
@@ -77,6 +83,23 @@ if (!(await isAdminRequest(Astro.request))) return Astro.redirect('/admin-login'
         result.textContent = error.message || 'Unable to load email options.';
       }
     }
+    document.querySelector('#test-email-button').addEventListener('click', async () => {
+      const button = document.querySelector('#test-email-button');
+      const output = document.querySelector('#test-email-result');
+      button.disabled = true;
+      output.textContent = 'Submitting test message…';
+      try {
+        const response = await fetch('/api/admin/test-email', { method: 'POST' });
+        const data = await response.json();
+        if (response.status === 401) { location.href = '/admin-login'; return; }
+        if (!response.ok) throw new Error(data.error || 'Send failed.');
+        output.textContent = 'Accepted by email provider. Check healingtheheartca@gmail.com (including spam) to confirm delivery.';
+      } catch (error) {
+        output.textContent = error.message || 'Test email failed.';
+      } finally {
+        button.disabled = false;
+      }
+    });
     tmpl.addEventListener('change', drawPreview);
     form.addEventListener('submit', async event => {
       event.preventDefault();
