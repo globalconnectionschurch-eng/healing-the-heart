@@ -3,7 +3,9 @@
   "name": "healing-the-heart",
   "main": "@astrojs/cloudflare/entrypoints/server",
   "compatibility_date": "2026-09-15",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "workers_dev": true,
   "preview_urls": true,
   "assets": {
@@ -24,5 +26,8 @@
     "MONERIS_STORE_ID": "mogo031434",
     "MONERIS_CHECKOUT_ID": "chktKTUYE31434",
     "MONERIS_ENV": "production"
+  },
+  "images": {
+    "binding": "IMAGES"
   }
 }
