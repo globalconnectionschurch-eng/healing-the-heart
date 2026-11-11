@@ -9,6 +9,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
     {signedIn ? (
       <section id="dashboard">
         <div class="heading"><div><p class="eyebrow">Healing the Heart</p><h1>Discounts</h1><p>Currently active discount codes</p></div><button id="logout" class="button outline" type="button">Sign out</button></div>
+        <nav class="discount-portal-nav" aria-label="Staff portal sections"><a href="/admindiscount" aria-current="page">Discounts</a><a href="/admindiscount/email">✉ Email</a></nav>
         <div class="toolbar"><button id="open-create" class="button primary" type="button">+ Create New Discount</button></div>
         <div id="discount-list" class="discount-list" aria-live="polite">Loading current discounts…</div>
         <section id="create-panel" class="panel" hidden>
@@ -86,6 +87,10 @@ Astro.response.headers.set('Cache-Control', 'no-store');
     }
   </script>
   <style is:global>
+    .discount-portal-nav{display:flex;gap:.65rem;margin:1.5rem 0 .7rem;padding:.35rem;border:1px solid #dce6de;border-radius:15px;background:#f7faf7;max-width:420px}
+    .discount-portal-nav a{flex:1;text-align:center;text-decoration:none;padding:.7rem .9rem;border-radius:11px;font-weight:750;color:#36614f}
+    .discount-portal-nav a[aria-current="page"]{background:#fff;color:#1c5341;box-shadow:0 2px 9px #173e2d19}
+    .discount-portal-nav a:hover{background:#e5eee7}
     .discount-room{max-width:1040px;margin:3rem auto;padding:0 1.25rem 4rem;min-height:50vh}
     .discount-room [hidden]{display:none!important}
     .discount-room .heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
