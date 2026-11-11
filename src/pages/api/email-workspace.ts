@@ -36,7 +36,7 @@ export const GET: APIRoute = async ({request, url}) => {
   const view = url.searchParams.get('view');
   if (view === 'contacts') {
     const search = String(url.searchParams.get('q') ?? '').trim().slice(0, 80);
-    const {results} = await env.DB.prepare('SELECT id,name,email FROM students WHERE email IS NOT NULL AND TRIM(email)<>"" AND (name LIKE ? OR email LIKE ?) ORDER BY name COLLATE NOCASE LIMIT 200')
+    const {results} = await env.DB.prepare("SELECT id,name,email FROM students WHERE email IS NOT NULL AND TRIM(email)<>'' AND (name LIKE ? OR email LIKE ?) ORDER BY name COLLATE NOCASE LIMIT 200")
       .bind('%' + search + '%', '%' + search + '%').all<{id:string;name:string;email:string}>();
     return reply({contacts:results});
   }
