@@ -1,0 +1,315 @@
+---
+interface Props { backHref?: string; backLabel?: string; portal?: string }
+const { backHref = '/admin', backLabel = 'Dashboard', portal = 'Administration' } = Astro.props;
+---
+<section class="admin-shell mail-workspace">
+  <div class="admin-header">
+    <div>
+      <p class="eyebrow">{portal} · Communication</p>
+      <h1>Email</h1>
+      <p>Create a message, email a class, send announcements and manage templates.</p>
+    </div>
+    <a href={backHref} class="button outline">← {backLabel}</a>
+  </div>
+  <div class="mail-hero">
+    <div class="mail-sender"><span aria-hidden="true" class="sender-icon">✉</span><div><small>Sending from</small><strong>Healing the Heart &lt;info@healingtheheart.ca&gt;</strong><small>Replies forward to healingtheheartca@gmail.com</small></div></div>
+    <button id="new-email" type="button" class="button primary">＋ Send New Email</button>
+  </div>
+  <section class="admin-section composer" id="composer" hidden>
+    <div class="admin-section-title"><div><p class="eyebrow">New message</p><h2>Compose email</h2><p>Enter addresses directly or choose people from the attendee directory.</p></div><button type="button" id="close-compose" class="button outline">Close</button></div>
+    <form id="compose-form" class="admin-form">
+      <label>To <input id="compose-to" type="text" inputmode="email" autocomplete="off" placeholder="name@example.com" required></label>
+      <div class="address-row"><label>CC <input id="compose-cc" type="text" inputmode="email" autocomplete="off" placeholder="Optional · comma-separated"></label><label>BCC <input id="compose-bcc" type="text" inputmode="email" autocomplete="off" placeholder="Optional · recipients stay private"></label></div>
+      <details class="directory-picker">
+        <summary>◎ Choose from attendee directory</summary>
+        <div class="directory-picker-inner">
+          <label>Search attendees <input id="address-search" type="search" autocomplete="off" placeholder="Search name or email"></label>
+          <p class="field-note">Add anyone to To, CC or BCC. You can also enter outside email addresses above.</p>
+          <div id="address-results" aria-live="polite">Search to find an attendee.</div>
+        </div>
+      </details>
+      <label>Subject <input id="compose-subject" maxlength="180" required placeholder="Email subject"></label>
+      <label>Message <textarea id="compose-body" rows="10" maxlength="30000" required placeholder="Write your message here…"></textarea></label>
+      <div class="compose-actions"><button id="send-compose" class="button primary" type="submit">Send Email</button><span id="compose-status" class="field-note" role="status" aria-live="polite"></span></div>
+    </form>
+  </section>
+
+  <div class="mail-feature-grid">
+    <a href="#class-message" class="feature-card"><span>✉</span><strong>Welcome &amp; class emails</strong><small>Send a saved template to enrolled students.</small></a>
+    <a href="#broadcast-message" class="feature-card"><span>◉</span><strong>Broadcast email</strong><small>Reach attendees who haven't opted out.</small></a>
+    <a href="#mail-templates" class="feature-card"><span>✎</span><strong>Email templates</strong><small>Edit or create reusable emails.</small></a>
+    <a href="#mail-history" class="feature-card"><span>↗</span><strong>Sent history</strong><small>See provider acceptance and failures.</small></a>
+  </div>
+
+  <details class="admin-section mail-detail" id="class-message">
+    <summary><div><p class="eyebrow">Class communication</p><h2>Welcome &amp; class emails</h2></div><span>＋</span></summary>
+    <div class="detail-inner">
+      <p>Select a class and saved template. Emails are sent manually only; automatic welcome emails remain disabled.</p>
+      <form id="class-form" class="admin-form">
+        <div class="address-row"><label>Class <select id="class-select" required><option value="">Loading…</option></select></label><label>Template <select id="class-template" required><option value="">Loading…</option></select></label></div>
+        <div class="class-template-preview" id="class-preview">Choose a template to view its contents.</div>
+        <button class="button primary" type="submit" id="class-send" disabled>Review &amp; Send to Class</button>
+        <p class="field-note" id="class-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </details>
+
+  <details class="admin-section mail-detail" id="broadcast-message">
+    <summary><div><p class="eyebrow">Announcements</p><h2>Broadcast email</h2></div><span>＋</span></summary>
+    <div class="detail-inner">
+      <p>Send to everyone in the attendee directory who has <strong>not</strong> opted out of mass emails. You'll confirm the recipient count first.</p>
+      <form id="broadcast-form" class="admin-form">
+        <label>Subject <input id="broadcast-subject" maxlength="180" required></label>
+        <label>Message <textarea id="broadcast-body" rows="7" maxlength="30000" required></textarea></label>
+        <button id="broadcast-send" class="button primary" type="submit">Review Recipients &amp; Send</button>
+        <p id="broadcast-status" class="field-note" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </details>
+
+  <details class="admin-section mail-detail" id="mail-templates">
+    <summary><div><p class="eyebrow">Saved messages</p><h2>Email templates</h2></div><span>＋</span></summary>
+    <div class="detail-inner">
+      <form class="admin-form" id="template-form">
+        <label>Choose template <select id="template-select"><option value="">＋ Create a new template</option></select></label>
+        <label>Template name <input id="template-name" required maxlength="140"></label>
+        <label>When to use (optional) <input id="template-trigger"></label>
+        <label>Subject <input id="template-subject" required maxlength="180"></label>
+        <label>Message <textarea id="template-body" rows="11" required maxlength="30000"></textarea></label>
+        <p class="field-note">Class placeholders supported: {{firstName}}, {{classTitle}}, {{dateRange}}, {{schedule}}, {{classTime}}, {{locationName}}.</p>
+        <button id="template-save" class="button primary" type="submit">Save Template</button>
+        <p id="template-status" class="field-note" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </details>
+
+  <details class="admin-section mail-detail" id="mail-history">
+    <summary><div><p class="eyebrow">Communication log</p><h2>Sent history</h2></div><span>＋</span></summary>
+    <div class="detail-inner">
+      <button id="history-refresh" class="button outline" type="button">Refresh History</button>
+      <p class="field-note">A "sent" status means the email provider accepted the message, not necessarily that it was delivered to the inbox.</p>
+      <div id="history-list" class="history-list">Open to view recent messages.</div>
+    </div>
+  </details>
+</section>
+<script is:inline>
+  (() => {
+    const $ = id => document.getElementById(id);
+    let classes = [], templates = [], searchTimer;
+    const endpoint = '/api/email-workspace';
+    async function read(view, q='') {
+      const response = await fetch(endpoint + '?view=' + encodeURIComponent(view) + (q ? '&q=' + encodeURIComponent(q) : ''), {cache:'no-store'});
+      if (response.status === 401) throw Error('Your session has expired. Please sign in again.');
+      const body = await response.json();
+      if (!response.ok) throw Error(body.error || 'Unable to load ' + view + '.');
+      return body;
+    }
+    async function write(data) {
+      const response = await fetch(endpoint, {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});
+      const body = await response.json();
+      if (response.status === 401) throw Error('Your session has expired. Please sign in again.');
+      if (!response.ok) throw Error(body.error || 'Unable to send email.');
+      return body;
+    }
+    $('new-email').addEventListener('click', () => {
+      $('composer').hidden = false;
+      $('composer').scrollIntoView({behavior:'smooth',block:'start'});
+      $('compose-to').focus();
+    });
+    $('close-compose').addEventListener('click', () => { $('composer').hidden = true; });
+
+    function addRecipient(field, address) {
+      const input = $('compose-' + field);
+      const current = input.value.split(/[,;\n]+/).map(s=>s.trim()).filter(Boolean);
+      if (!current.some(s=>s.toLowerCase()===address.toLowerCase())) current.push(address);
+      input.value = current.join(', ');
+    }
+    async function searchContacts() {
+      const list = $('address-results'), query = $('address-search').value.trim();
+      list.textContent = 'Loading attendees…';
+      try {
+        const data = await read('contacts', query);
+        list.replaceChildren();
+        if (!(data.contacts||[]).length) { list.textContent = 'No attendees found.'; return; }
+        for (const entry of data.contacts.slice(0,40)) {
+          const row = document.createElement('div');
+          row.className = 'contact-result';
+          const name = document.createElement('div');
+          name.className = 'contact-name';
+          const strong = document.createElement('strong'); strong.textContent = entry.name;
+          const email = document.createElement('small'); email.textContent = entry.email;
+          name.append(strong,email); row.append(name);
+          for(const [field,label] of [['to','To'],['cc','CC'],['bcc','BCC']]) {
+            const button = document.createElement('button');
+            button.type='button';button.className='contact-add';button.textContent='＋ ' + label;
+            button.addEventListener('click',()=>{addRecipient(field,entry.email);button.textContent='✓ Added';});
+            row.append(button);
+          }
+          list.append(row);
+        }
+      } catch (e) { list.textContent = e.message; }
+    }
+    $('address-search').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(searchContacts,200);});
+    document.querySelector('.directory-picker').addEventListener('toggle',e=>{if(e.target.open)searchContacts();});
+    $('compose-form').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const status=$('compose-status'),button=$('send-compose');
+      const payload={action:'compose',to:$('compose-to').value,cc:$('compose-cc').value,bcc:$('compose-bcc').value,subject:$('compose-subject').value,message:$('compose-body').value};
+      if(!confirm('Send this email from info@healingtheheart.ca?'))return;
+      button.disabled=true;status.textContent='Sending…';
+      try {
+        const sent=await write(payload);
+        status.textContent='Accepted by provider · ' + sent.recipientCount + ' recipient(s).';
+        $('compose-form').reset();
+      } catch(error){status.textContent=error.message;}
+      finally{button.disabled=false;}
+    });
+
+    async function loadSelection() {
+      try {
+        const [a,b]=await Promise.all([read('classes'),read('templates')]);
+        classes=a.classes||[];templates=b.templates||[];
+        const classSelect=$('class-select'),classTemplate=$('class-template'),templateSelect=$('template-select');
+        classSelect.replaceChildren(new Option('Choose class',''));
+        classTemplate.replaceChildren(new Option('Choose saved template',''));
+        templateSelect.replaceChildren(new Option('＋ Create a new template',''));
+        classes.forEach(c=>classSelect.add(new Option(c.title+' ('+c.student_count+' registered)',c.id)));
+        templates.forEach(t=>{
+          classTemplate.add(new Option(t.name,t.id));
+          templateSelect.add(new Option(t.name,t.id));
+        });
+        $('class-send').disabled=!(classes.length&&templates.length);
+        $('class-status').textContent=classes.length?'':'No classes available.';
+        drawTemplatePreview();
+      } catch(error){$('class-status').textContent=error.message;}
+    }
+    function drawTemplatePreview() {
+      const found=templates.find(t=>t.id===$('class-template').value), box=$('class-preview');
+      box.replaceChildren();
+      if(!found){box.textContent='Choose a template to preview its content.';return;}
+      const sub=document.createElement('strong'), body=document.createElement('p');
+      sub.textContent=found.subject;body.textContent=found.body;
+      box.append(sub,body);
+    }
+    $('class-template').addEventListener('change',drawTemplatePreview);
+    $('class-form').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const classId=$('class-select').value,templateId=$('class-template').value, status=$('class-status'),button=$('class-send');
+      if(!classId||!templateId){status.textContent='Choose class and template first.';return;}
+      button.disabled=true;status.textContent='Checking recipients…';
+      try{
+        const count=await write({action:'class',classId,templateId});
+        if(count.total===0){status.textContent='No registered students with email addresses.';return;}
+        if(!confirm('Send this template to '+count.total+' registered student(s)?')){status.textContent='Cancelled.';return;}
+        const result=await write({action:'class',classId,templateId,confirm:true});
+        status.textContent=result.sentCount+' accepted, '+result.failedCount+' failed. Review the history below.';
+      }catch(error){status.textContent=error.message;}finally{button.disabled=false;}
+    });
+    $('broadcast-form').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const subject=$('broadcast-subject').value,message=$('broadcast-body').value,button=$('broadcast-send'),status=$('broadcast-status');
+      button.disabled=true;status.textContent='Checking opted-in recipients…';
+      try{
+        const preview=await write({action:'broadcast',subject,message});
+        if(preview.total===0){status.textContent='No eligible recipients.';return;}
+        if(!confirm('Send to '+preview.total+' attendees who have not opted out?')){status.textContent='Cancelled.';return;}
+        const result=await write({action:'broadcast',subject,message,confirm:true});
+        status.textContent=result.sentCount+' accepted, '+result.failedCount+' failed.';
+      }catch(error){status.textContent=error.message;}finally{button.disabled=false;}
+    });
+    function editTemplate() {
+      const t=templates.find(x=>x.id===$('template-select').value);
+      $('template-name').value=t?.name||'';
+      $('template-trigger').value=t?.trigger_description||'';
+      $('template-subject').value=t?.subject||'';
+      $('template-body').value=t?.body||'';
+      $('template-status').textContent='';
+    }
+    $('template-select').addEventListener('change',editTemplate);
+    $('template-form').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const button=$('template-save'),status=$('template-status');
+      button.disabled=true;status.textContent='Saving…';
+      try{
+        const result=await write({action:'save-template',templateId:$('template-select').value||undefined,name:$('template-name').value,trigger:$('template-trigger').value,subject:$('template-subject').value,body:$('template-body').value});
+        status.textContent='Saved.';
+        const data=await read('templates');templates=data.templates||[];
+        const select=$('template-select'),selectedId=result.id;
+        select.replaceChildren(new Option('＋ Create a new template',''));
+        $('class-template').replaceChildren(new Option('Choose saved template',''));
+        templates.forEach(t=>{select.add(new Option(t.name,t.id));$('class-template').add(new Option(t.name,t.id));});
+        select.value=selectedId;
+        editTemplate();
+        status.textContent='Template saved.';
+      }catch(error){status.textContent=error.message;}finally{button.disabled=false;}
+    });
+    async function loadHistory(){
+      const list=$('history-list');list.textContent='Loading history…';
+      try{
+        const data=await read('history');list.replaceChildren();
+        if(!(data.logs||[]).length){list.textContent='No emails have been logged yet.';return;}
+        for(const log of data.logs){
+          const card=document.createElement('div');card.className='history-item';
+          const text=document.createElement('div');
+          const subj=document.createElement('strong');subj.textContent=log.subject||'(No subject)';
+          const who=document.createElement('small');who.textContent=log.recipient_email||'';
+          text.append(subj,who);
+          const stat=document.createElement('div');
+          const pill=document.createElement('b');pill.className=log.status==='sent'?'delivered':'failed';pill.textContent=log.status==='sent'?'Accepted':'Failed';
+          const date=document.createElement('small');date.textContent=log.sent_at?new Date(log.sent_at).toLocaleString():'';
+          stat.append(pill,date);card.append(text,stat);
+          if(log.error){const err=document.createElement('p');err.textContent=log.error;card.append(err);}
+          list.append(card);
+        }
+      }catch(error){list.textContent=error.message;}
+    }
+    $('history-refresh').addEventListener('click',loadHistory);
+    $('mail-history').addEventListener('toggle',e=>{if(e.target.open)loadHistory();});
+    loadSelection();
+  })();
+</script>
+<style>
+  .mail-workspace{max-width:1120px}
+  .mail-workspace [hidden]{display:none!important}
+  .mail-hero{margin:1.1rem 0 1.6rem;border:1px solid #dce6dc;border-radius:20px;background:linear-gradient(105deg,#eef6f0,#fff);padding:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+  .mail-sender{display:flex;align-items:center;gap:.9rem;min-width:0}
+  .mail-sender>div{min-width:0}.mail-sender strong,.mail-sender small{display:block;overflow-wrap:anywhere}
+  .mail-sender strong{color:#264f43;font-size:1rem}.mail-sender small{color:#62776c;font-size:.78rem;margin:.15rem 0}
+  .sender-icon{font-size:1.8rem;color:#2e7961}
+  .composer{margin-bottom:1.5rem;scroll-margin-top:2rem}
+  .address-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+  .address-row>label{min-width:0}.mail-workspace input,.mail-workspace textarea,.mail-workspace select{width:100%;box-sizing:border-box;min-width:0}
+  .compose-actions{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+  .directory-picker{border:1px solid #dee7dd;border-radius:12px;padding:.85rem 1rem;background:#f8faf8;margin:.6rem 0 1rem}
+  .directory-picker summary{cursor:pointer;color:#285c4b;font-weight:750}
+  .directory-picker-inner{padding-top:1rem}
+  #address-results{display:grid;gap:.3rem;max-height:320px;overflow:auto;margin-top:.65rem}
+  .contact-result{padding:.65rem 0;border-bottom:1px solid #e4eae4;display:flex;gap:.35rem;align-items:center;flex-wrap:wrap}
+  .contact-name{min-width:160px;flex:1 1 200px}
+  .contact-name strong,.contact-name small{display:block;overflow-wrap:anywhere}
+  .contact-name small{color:#60706a;font-size:.78rem}
+  .contact-add{font:inherit;border:1px solid #bdd7c7;background:#fff;border-radius:8px;padding:.4rem .6rem;font-size:.77rem;font-weight:700;color:#285c4b;cursor:pointer}
+  .mail-feature-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7rem;margin:1rem 0 1.6rem}
+  .feature-card{min-width:0;display:flex;flex-direction:column;gap:.35rem;border:1px solid #dee5dd;border-radius:14px;padding:1rem;text-decoration:none;background:#fff;color:#234d40}
+  .feature-card>span{font-size:1.5rem}.feature-card strong{font-size:.94rem}.feature-card small{font-size:.78rem;color:#67756e;line-height:1.45}
+  .feature-card:hover{background:#f2f8f2;border-color:#a8c8b3}
+  .mail-detail{margin:0 0 .95rem}
+  .mail-detail>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:1rem;list-style:none}
+  .mail-detail>summary::-webkit-details-marker{display:none}
+  .mail-detail>summary h2{margin:0;font-size:1.18rem}
+  .mail-detail>summary .eyebrow{margin:0 0 .15rem}
+  .mail-detail>summary>span{color:#2b6651;font-size:1.4rem}
+  .mail-detail[open]>summary>span{transform:rotate(45deg)}
+  .detail-inner{border-top:1px solid #e4ece5;padding-top:1rem;margin-top:1rem}
+  .detail-inner>p:first-child{color:#5f6e65;line-height:1.55}
+  .class-template-preview{border:1px solid #e0e7df;background:#fff;border-radius:12px;padding:1rem;max-height:220px;overflow:auto;margin:1rem 0;white-space:pre-wrap;color:#42564b;font-size:.89rem}
+  .class-template-preview strong{display:block;margin-bottom:.4rem}.class-template-preview p{white-space:pre-wrap;margin:.2rem 0}
+  .history-list{display:grid;gap:.6rem;margin-top:1rem}
+  .history-item{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;padding:.8rem 1rem;border-radius:11px;background:#fff;border:1px solid #e6e8e4}
+  .history-item strong,.history-item small{display:block}.history-item small{font-size:.77rem;color:#6a766e;margin-top:.15rem;overflow-wrap:anywhere}
+  .history-item>div:last-of-type{text-align:right}
+  .history-item b{font-size:.78rem}.history-item .delivered{color:#2a7044}.history-item .failed{color:#a33232}
+  .history-item p{flex:1 1 100%;margin:0;color:#a33232;font-size:.78rem}
+  @media(max-width:800px){.mail-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:600px){.mail-hero>button{width:100%;justify-content:center}.address-row{grid-template-columns:1fr}.mail-feature-grid{gap:.55rem}.feature-card{padding:.8rem}.feature-card small{font-size:.73rem}}
+</style>
